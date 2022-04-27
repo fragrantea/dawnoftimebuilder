@@ -1,21 +1,20 @@
 package org.dawnoftimebuilder.block.templates;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.EnumProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.state.properties.DoorHingeSide;
 import net.minecraft.state.properties.Half;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.BlockGetter;
 import org.dawnoftimebuilder.util.DoTBBlockStateProperties;
 
 import javax.annotation.Nullable;
@@ -30,15 +29,15 @@ public class ShuttersBlock extends SmallShuttersBlock {
     }
 
     @Override
-    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
         builder.add(HALF);
     }
 
     @Nullable
     @Override
-    public BlockState getStateForPlacement(BlockItemUseContext context) {
-        World world = context.getLevel();
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        Level world = context.getLevel();
         Direction direction = context.getHorizontalDirection();
         BlockPos pos = context.getClickedPos();
         if(!world.getBlockState(pos.above()).canBeReplaced(context))
@@ -52,7 +51,7 @@ public class ShuttersBlock extends SmallShuttersBlock {
     }
 
     @Override
-    public boolean canSurvive(BlockState state, IWorldReader worldIn, BlockPos pos) {
+    public boolean canSurvive(BlockState state, BlockGetter worldIn, BlockPos pos) {
         if(state.getValue(HALF) == Half.TOP){
             BlockState bottomState = worldIn.getBlockState(pos.below());
             if(bottomState.getBlock() == this){
@@ -65,12 +64,12 @@ public class ShuttersBlock extends SmallShuttersBlock {
     }
 
     @Override
-    public void setPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack itemStack) {
+    public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack itemStack) {
         worldIn.setBlock(pos.above(), state.setValue(HALF, Half.TOP), 10);
     }
 
     @Override
-    public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) {
+    public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, Level worldIn, BlockPos currentPos, BlockPos facingPos) {
         Direction halfDirection = (stateIn.getValue(HALF) == Half.TOP) ? Direction.DOWN : Direction.UP;
         if(facing == halfDirection){
             if(facingState.getBlock() != this)
@@ -85,7 +84,7 @@ public class ShuttersBlock extends SmallShuttersBlock {
     }
 
     @Override
-    protected DoTBBlockStateProperties.OpenPosition getOpenState(BlockState stateIn, IWorld worldIn, BlockPos pos) {
+    protected DoTBBlockStateProperties.OpenPosition getOpenState(BlockState stateIn, Level worldIn, BlockPos pos) {
         BlockPos secondPos = pos.relative(stateIn.getValue(HALF) == Half.TOP ? Direction.DOWN : Direction.UP);
         if (!worldIn.getBlockState(secondPos).getCollisionShape(worldIn, pos).isEmpty() || !worldIn.getBlockState(pos).getCollisionShape(worldIn, pos).isEmpty())
             return DoTBBlockStateProperties.OpenPosition.HALF;

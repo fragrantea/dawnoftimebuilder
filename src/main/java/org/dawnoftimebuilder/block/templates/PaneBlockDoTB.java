@@ -1,26 +1,29 @@
 package org.dawnoftimebuilder.block.templates;
 
 import net.minecraft.block.*;
+import net.minecraft.core.BlockPos;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.IronBarsBlock;
+import net.minecraft.world.level.block.state.BlockState;
 
 import static org.dawnoftimebuilder.registry.DoTBBlocksRegistry.PAPER_DOOR;
 
-public class PaneBlockDoTB extends PaneBlock {
+public class PaneBlockDoTB extends IronBarsBlock {
 
 	public PaneBlockDoTB(Properties properties) {
         super(properties);
     }
 
 	@Override
-	public BlockState getStateForPlacement(BlockItemUseContext context) {
+	public BlockState getStateForPlacement(BlockPlaceContext context) {
 		//Must be overridden to allow connection to paper_door
-		IBlockReader world = context.getLevel();
+		BlockGetter world = context.getLevel();
 		BlockPos pos = context.getClickedPos();
 		Fluid fluid = context.getLevel().getFluidState(context.getClickedPos()).getType();
 		BlockPos posNorth = pos.north();
@@ -40,7 +43,7 @@ public class PaneBlockDoTB extends PaneBlock {
 	}
 
 	@Override
-	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) {
+	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, Level worldIn, BlockPos currentPos, BlockPos facingPos) {
 		//Must be overridden to allow connection to paper_door
 		if (stateIn.getValue(WATERLOGGED)) worldIn.getLiquidTicks().scheduleTick(currentPos, Fluids.WATER, Fluids.WATER.getTickDelay(worldIn));
 		return facing.getAxis().isHorizontal() ? stateIn.setValue(PROPERTY_BY_DIRECTION.get(facing), this.canAttachPane(facingState, facingState.isFaceSturdy(worldIn, facingPos, facing.getOpposite()))) : stateIn;
@@ -48,6 +51,6 @@ public class PaneBlockDoTB extends PaneBlock {
 
 	public boolean canAttachPane(BlockState adjacentState, boolean hasSolidSide) {
 		Block block = adjacentState.getBlock();
-		return (!isExceptionForConnection(block) && hasSolidSide) || block instanceof PaneBlock || block == PAPER_DOOR.get();
+		return (!isExceptionForConnection(block) && hasSolidSide) || block instanceof IronBarsBlock || block == PAPER_DOOR.get();
 	}
 }

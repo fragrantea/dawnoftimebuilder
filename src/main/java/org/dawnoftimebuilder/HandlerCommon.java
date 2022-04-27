@@ -2,11 +2,11 @@ package org.dawnoftimebuilder;
 
 
 import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
 import net.minecraft.item.SpawnEggItem;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.blockplacer.SimpleBlockPlacer;
 import net.minecraft.world.gen.blockstateprovider.SimpleBlockStateProvider;
@@ -25,7 +25,6 @@ import org.dawnoftimebuilder.generation.DefaultCropsFeature;
 import org.dawnoftimebuilder.generation.DoTBBlockPlacer;
 import org.dawnoftimebuilder.registry.DoTBBlocksRegistry;
 
-import static org.dawnoftimebuilder.DawnOfTimeBuilder.MOD_ID;
 import static org.dawnoftimebuilder.DoTBConfig.*;
 import static org.dawnoftimebuilder.registry.DoTBEntitiesRegistry.JAPANESE_DRAGON_ENTITY;
 import static org.dawnoftimebuilder.registry.DoTBEntitiesRegistry.SILKMOTH_ENTITY;
@@ -48,8 +47,8 @@ public class HandlerCommon {
     @SubscribeEvent
     public static void eggRegisterEvent(RegistryEvent.Register<Item> event){
         //The eggs can only be registered here
-        event.getRegistry().register(new SpawnEggItem(SILKMOTH_ENTITY.get(), 0xDBD8BD, 0xFEFEFC, new Item.Properties().tab(ItemGroup.TAB_MISC)));
-        event.getRegistry().register(new SpawnEggItem(JAPANESE_DRAGON_ENTITY.get(), 0xFFFFFF, 0xFFFFFF, new Item.Properties().tab(ItemGroup.TAB_MISC)));
+        event.getRegistry().register(new SpawnEggItem(SILKMOTH_ENTITY.get(), 0xDBD8BD, 0xFEFEFC, new Item.Properties().tab(CreativeModeTab.TAB_MISC)));
+        event.getRegistry().register(new SpawnEggItem(JAPANESE_DRAGON_ENTITY.get(), 0xFFFFFF, 0xFFFFFF, new Item.Properties().tab(CreativeModeTab.TAB_MISC)));
     }
 
     @SubscribeEvent(priority = EventPriority.HIGH)

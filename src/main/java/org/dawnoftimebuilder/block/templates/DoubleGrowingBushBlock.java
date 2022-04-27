@@ -1,27 +1,25 @@
 package org.dawnoftimebuilder.block.templates;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.block.material.PushReaction;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Food;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.EnumProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.state.properties.Half;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.PlantType;
 
@@ -46,7 +44,7 @@ public class DoubleGrowingBushBlock extends GrowingBushBlock {
 	}
 
 	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
 		if(state.getValue(HALF) == Half.BOTTOM){
 			return SHAPES[Math.min(this.getAge(state), SHAPES.length - 1)];
 		}else return TOP_SHAPES[Math.min(state.getValue(this.getCutProperty()) ? this.getMaxAge() : this.getAge(state), TOP_SHAPES.length - 1)];
@@ -64,7 +62,7 @@ public class DoubleGrowingBushBlock extends GrowingBushBlock {
 		return new VoxelShape[]{
 				Block.box(5.5D, 0.0D, 5.5D, 10.5D, 6.0D, 10.5D),
 				Block.box(4.5D, 0.0D, 4.5D, 11.5D, 16.0D, 11.5D),
-				VoxelShapes.or(
+				Shapes.or(
 						Block.box(6.0D, 0.0D, 6.0D, 10.0D, 12.0D, 10.0D),
 						Block.box(4.0D, 12.0D, 4.0D, 12.0D, 16.0D, 12.0D)),
 				Block.box(6.0D, 0.0D, 6.0D, 10.0D, 16.0D, 10.0D),
@@ -90,13 +88,13 @@ public class DoubleGrowingBushBlock extends GrowingBushBlock {
 	}
 
 	@Override
-	protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		super.createBlockStateDefinition(builder);
 		builder.add(HALF);
 	}
 
 	@Override
-	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) {
+	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, Level worldIn, BlockPos currentPos, BlockPos facingPos) {
 		Half half = stateIn.getValue(HALF);
 		if (facing.getAxis() == Direction.Axis.Y && half == Half.BOTTOM == (facing == Direction.UP)) {
 			if(facingState.getBlock() == this && facingState.getValue(HALF) != half){
@@ -110,12 +108,12 @@ public class DoubleGrowingBushBlock extends GrowingBushBlock {
 	}
 
 	@Override
-	public void playerDestroy(World worldIn, PlayerEntity player, BlockPos pos, BlockState state, @Nullable TileEntity te, ItemStack stack) {
+	public void playerDestroy(Level worldIn, Player player, BlockPos pos, BlockState state, @Nullable BlockEntity te, ItemStack stack) {
 		super.playerDestroy(worldIn, player, pos, Blocks.AIR.defaultBlockState(), te, stack);
 	}
 
 	@Override
-	public void playerWillDestroy(World worldIn, BlockPos pos, BlockState state, PlayerEntity player) {
+	public void playerWillDestroy(Level worldIn, BlockPos pos, BlockState state, Player player) {
 		Half half = state.getValue(HALF);
 		BlockPos otherPos = (half == Half.BOTTOM) ? pos.above() : pos.below();
 		BlockState blockstate = worldIn.getBlockState(otherPos);
@@ -133,7 +131,7 @@ public class DoubleGrowingBushBlock extends GrowingBushBlock {
 	}
 
 	@Override
-	public void harvestWithoutBreaking(BlockState state, World worldIn, BlockPos pos, ItemStack itemStackHand, String blockName, float dropMultiplier) {
+	public void harvestWithoutBreaking(BlockState state, Level worldIn, BlockPos pos, ItemStack itemStackHand, String blockName, float dropMultiplier) {
 		boolean isTop = state.getValue(HALF) == Half.TOP;
 		worldIn.setBlock(isTop ? pos.below() : pos.above(), state.setValue(this.getAgeProperty(), this.cutAge).setValue(this.getCutProperty(), true).setValue(HALF, isTop ? Half.BOTTOM : Half.TOP), 2);
 		super.harvestWithoutBreaking(state, worldIn, pos, itemStackHand, blockName, dropMultiplier);
@@ -141,7 +139,7 @@ public class DoubleGrowingBushBlock extends GrowingBushBlock {
 
 	// Only called with Bonemeal
 	@Override
-    public void growCrops(World worldIn, BlockPos pos, BlockState state) {
+    public void growCrops(Level worldIn, BlockPos pos, BlockState state) {
 		if(this.isBottomCrop(state)){
 	        int newAge = this.getAge(state) + this.getBonemealAgeIncrease(worldIn);
 	        if (newAge > this.getMaxAge()) newAge = this.getMaxAge();
@@ -157,7 +155,7 @@ public class DoubleGrowingBushBlock extends GrowingBushBlock {
     }
 
 	@Override
-	public void tick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {
+	public void tick(BlockState state, ServerLevel worldIn, BlockPos pos, Random random) {
 		if(this.isBottomCrop(state)) {
 			if (!worldIn.isAreaLoaded(pos, 1) || state.getValue(PERSISTENT))
 				return; // Forge: prevent loading unloaded chunks when checking neighbor's light
@@ -206,7 +204,7 @@ public class DoubleGrowingBushBlock extends GrowingBushBlock {
 	}
 
 	@Override
-	public boolean canSurvive(BlockState state, IWorldReader worldIn, BlockPos pos) {
+	public boolean canSurvive(BlockState state, BlockGetter worldIn, BlockPos pos) {
 		if(state.getValue(HALF) == Half.TOP){
 			BlockState stateUnder = worldIn.getBlockState(pos.below());
 			if(stateUnder.getBlock() == this) return stateUnder.getValue(HALF) == Half.BOTTOM;
@@ -215,7 +213,7 @@ public class DoubleGrowingBushBlock extends GrowingBushBlock {
 	}
 
 	@Override
-	public void setPlantWithAge(BlockState currentState, IWorld worldIn, BlockPos pos, int newAge) {
+	public void setPlantWithAge(BlockState currentState, Level worldIn, BlockPos pos, int newAge) {
 		if(currentState.getValue(HALF) == Half.TOP) pos = pos.below();
 		if(newAge >= this.getAgeReachingTopBlock()){
 			BlockPos posUp = pos.above();

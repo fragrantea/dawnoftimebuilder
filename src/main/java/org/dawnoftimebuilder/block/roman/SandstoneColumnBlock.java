@@ -1,24 +1,22 @@
 package org.dawnoftimebuilder.block.roman;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.SoundType;
-import net.minecraft.block.material.Material;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.shapes.Shapes;
 import org.dawnoftimebuilder.block.templates.ColumnConnectibleBlock;
 
 public class SandstoneColumnBlock extends ColumnConnectibleBlock {
 
-    private static final VoxelShape VS_BOT = VoxelShapes.or(
+    private static final VoxelShape VS_BOT = Shapes.or(
     		Block.box(2.0D, 0.0D, 2.0D, 14.0D, 8.0D, 14.0D),
 			Block.box(4.0D, 8.0D, 4.0D, 12.0D, 16.0D, 12.0D)
 	);
 	private static final VoxelShape VS_MID = Block.box(4.0D, 0.0D, 4.0D, 12.0D, 16.0D, 12.0D);
-	private static final VoxelShape VS_TOP = VoxelShapes.or(
+	private static final VoxelShape VS_TOP = Shapes.or(
 			Block.box(0.0D, 8.0D, 0.0D, 16.0D, 16.0D, 16.0D),
 			Block.box(4.0D, 0.0D, 4.0D, 12.0D, 8.0D, 12.0D)
 	);
@@ -28,7 +26,7 @@ public class SandstoneColumnBlock extends ColumnConnectibleBlock {
 	}
 
 	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
 		switch (state.getValue(VERTICAL_CONNECTION)) {
 			case UNDER:
 				return VS_TOP;

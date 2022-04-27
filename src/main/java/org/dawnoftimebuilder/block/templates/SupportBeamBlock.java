@@ -1,20 +1,21 @@
 package org.dawnoftimebuilder.block.templates;
 
 import net.minecraft.block.*;
-import net.minecraft.block.material.Material;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.EnumProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Rotation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.core.Direction;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import org.dawnoftimebuilder.block.IBlockPillar;
 import org.dawnoftimebuilder.util.DoTBBlockStateProperties;
 
@@ -31,13 +32,13 @@ public class SupportBeamBlock extends WaterloggedBlock {
 	}
 
 	@Override
-	protected void createBlockStateDefinition(StateContainer.Builder<net.minecraft.block.Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		super.createBlockStateDefinition(builder);
 		builder.add(PILLAR_CONNECTION, HORIZONTAL_AXIS, SUBAXIS);
 	}
 
 	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
 		int index = 0;
 		switch (state.getValue(PILLAR_CONNECTION)) {
 			case FOUR_PX:
@@ -72,42 +73,42 @@ public class SupportBeamBlock extends WaterloggedBlock {
 	 * 11 : Axis X + Z + 10px <p/>
 	 */
 	private static VoxelShape[] makeShapes() {
-		VoxelShape vs = net.minecraft.block.Block.box(0.0D, 12.0D, 0.0D, 16.0D, 16.0D, 16.0D);
-		VoxelShape vs_axis_x = VoxelShapes.or(vs, net.minecraft.block.Block.box(0.0D, 4.0D, 4.0D, 16.0D, 12.0D, 12.0D));
-		VoxelShape vs_axis_z = VoxelShapes.or(vs, net.minecraft.block.Block.box(4.0D, 4.0D, 0.0D, 12.0D, 12.0D, 16.0D));
-		VoxelShape vs_axis_x_z = VoxelShapes.or(vs_axis_x, net.minecraft.block.Block.box(4.0D, 4.0D, 0.0D, 12.0D, 12.0D, 16.0D));
-		VoxelShape vs_axis_4px = net.minecraft.block.Block.box(6.0D, 0.0D, 6.0D, 10.0D, 16.0D, 10.0D);
-		VoxelShape vs_axis_8px = net.minecraft.block.Block.box(4.0D, 0.0D, 4.0D, 12.0D, 16.0D, 12.0D);
-		VoxelShape vs_axis_10px = net.minecraft.block.Block.box(3.0D, 0.0D, 3.0D, 13.0D, 16.0D, 13.0D);
+		VoxelShape vs = Block.box(0.0D, 12.0D, 0.0D, 16.0D, 16.0D, 16.0D);
+		VoxelShape vs_axis_x = Shapes.or(vs, Block.box(0.0D, 4.0D, 4.0D, 16.0D, 12.0D, 12.0D));
+		VoxelShape vs_axis_z = Shapes.or(vs, Block.box(4.0D, 4.0D, 0.0D, 12.0D, 12.0D, 16.0D));
+		VoxelShape vs_axis_x_z = Shapes.or(vs_axis_x, Block.box(4.0D, 4.0D, 0.0D, 12.0D, 12.0D, 16.0D));
+		VoxelShape vs_axis_4px = Block.box(6.0D, 0.0D, 6.0D, 10.0D, 16.0D, 10.0D);
+		VoxelShape vs_axis_8px = Block.box(4.0D, 0.0D, 4.0D, 12.0D, 16.0D, 12.0D);
+		VoxelShape vs_axis_10px = Block.box(3.0D, 0.0D, 3.0D, 13.0D, 16.0D, 13.0D);
 		return new VoxelShape[]{
 				vs_axis_x,
 				vs_axis_z,
 				vs_axis_x_z,
-				VoxelShapes.or(vs_axis_x, vs_axis_4px),
-				VoxelShapes.or(vs_axis_z, vs_axis_4px),
-				VoxelShapes.or(vs_axis_x_z, vs_axis_4px),
-				VoxelShapes.or(vs_axis_x, vs_axis_8px),
-				VoxelShapes.or(vs_axis_z, vs_axis_8px),
-				VoxelShapes.or(vs_axis_x_z, vs_axis_8px),
-				VoxelShapes.or(vs_axis_x, vs_axis_10px),
-				VoxelShapes.or(vs_axis_z, vs_axis_10px),
-				VoxelShapes.or(vs_axis_x_z, vs_axis_10px)
+				Shapes.or(vs_axis_x, vs_axis_4px),
+				Shapes.or(vs_axis_z, vs_axis_4px),
+				Shapes.or(vs_axis_x_z, vs_axis_4px),
+				Shapes.or(vs_axis_x, vs_axis_8px),
+				Shapes.or(vs_axis_z, vs_axis_8px),
+				Shapes.or(vs_axis_x_z, vs_axis_8px),
+				Shapes.or(vs_axis_x, vs_axis_10px),
+				Shapes.or(vs_axis_z, vs_axis_10px),
+				Shapes.or(vs_axis_x_z, vs_axis_10px)
 		};
 	}
 
 	@Override
-	public BlockState getStateForPlacement(BlockItemUseContext context) {
+	public BlockState getStateForPlacement(BlockPlaceContext context) {
 		BlockState state = super.getStateForPlacement(context).setValue(HORIZONTAL_AXIS, context.getHorizontalDirection().getAxis());
 		return this.getCurrentState(state, context.getLevel(), context.getClickedPos());
 	}
 
 	@Override
-	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) {
+	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, Level worldIn, BlockPos currentPos, BlockPos facingPos) {
 		stateIn = super.updateShape(stateIn, facing, facingState, worldIn, currentPos, facingPos);
 		return this.getCurrentState(stateIn, worldIn, currentPos);
 	}
 
-	private BlockState getCurrentState(BlockState stateIn, IWorld worldIn, BlockPos currentPos) {
+	private BlockState getCurrentState(BlockState stateIn, Level worldIn, BlockPos currentPos) {
 		if (stateIn.getValue(HORIZONTAL_AXIS) == Direction.Axis.X){
 			if (canConnect(worldIn, currentPos, Direction.NORTH) || canConnect(worldIn, currentPos, Direction.SOUTH)) stateIn = stateIn.setValue(SUBAXIS, true);
 		}else{
@@ -116,7 +117,7 @@ public class SupportBeamBlock extends WaterloggedBlock {
 		return stateIn.setValue(PILLAR_CONNECTION, IBlockPillar.getPillarConnectionAbove(worldIn, currentPos.below()));
 	}
 
-	private boolean canConnect(IWorld world, BlockPos pos, Direction direction) {
+	private boolean canConnect(Level world, BlockPos pos, Direction direction) {
 		BlockState state = world.getBlockState(pos.relative(direction));
 		return isConnectibleBeam(state, direction) || isConnectibleSupportBeam(state, direction) || isConnectibleBeam(state, direction) || isConnectibleSupportBeam(state, direction);
 	}

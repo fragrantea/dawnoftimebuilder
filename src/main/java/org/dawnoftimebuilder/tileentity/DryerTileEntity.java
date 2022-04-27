@@ -1,19 +1,19 @@
 package org.dawnoftimebuilder.tileentity;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.IInventory;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.Container;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.play.server.SUpdateTileEntityPacket;
+import net.minecraft.network.Connection;
 import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
@@ -24,13 +24,12 @@ import org.dawnoftimebuilder.recipe.DryerRecipe;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.List;
 import java.util.Random;
 
-import static net.minecraft.block.Block.popResource;
+import static net.minecraft.world.level.block.Block.popResource;
 import static org.dawnoftimebuilder.registry.DoTBTileEntitiesRegistry.DRYER_TE;
 
-public class DryerTileEntity extends TileEntity implements ITickableTileEntity {
+public class DryerTileEntity extends BlockEntity implements ITickableTileEntity {
 
 	private final ItemStackHandler itemHandler = new ItemStackHandler(2);
 	private final int[] remainingTicks = new int[2];
@@ -70,43 +69,43 @@ public class DryerTileEntity extends TileEntity implements ITickableTileEntity {
 		}
 	}
 
-	public ActionResultType tryInsertItemStack(ItemStack itemStack, boolean simple, World worldIn, BlockPos pos, PlayerEntity player){
+	public InteractionResult tryInsertItemStack(ItemStack itemStack, boolean simple, Level worldIn, BlockPos pos, Player player){
 		//Try to put the itemStack in an empty dryer
-		if(this.putItemStackInFreeSpace(itemStack, simple, player)) return ActionResultType.SUCCESS;
+		if(this.putItemStackInFreeSpace(itemStack, simple, player)) return InteractionResult.SUCCESS;
 		//No empty dryer, let's see if we could replace a dried item with ours
 		if(simple){
 			if(this.itemIsDried(0)){
 				this.dropItemIndex(0, worldIn, pos);
 				this.putItemStackInIndex(0, itemStack, player);
-				return ActionResultType.SUCCESS;
-			}else return ActionResultType.PASS;
+				return InteractionResult.SUCCESS;
+			}else return InteractionResult.PASS;
 		}else{
 			int index = this.dropOneDriedItem(worldIn, pos);
-			if(index < 0) return ActionResultType.PASS;
+			if(index < 0) return InteractionResult.PASS;
 			else{
 				this.putItemStackInIndex(index, itemStack, player);
-				return ActionResultType.SUCCESS;
+				return InteractionResult.SUCCESS;
 			}
 		}
 	}
 
-	public ActionResultType dropOneItem(World worldIn, BlockPos pos){
-		if(this.dropOneDriedItem(worldIn, pos) > -1) return ActionResultType.SUCCESS;
+	public InteractionResult dropOneItem(Level worldIn, BlockPos pos){
+		if(this.dropOneDriedItem(worldIn, pos) > -1) return InteractionResult.SUCCESS;
 		if(!this.itemHandler.getStackInSlot(0).isEmpty()){
 			this.dropItemIndex(0, worldIn, pos);
-			return ActionResultType.SUCCESS;
+			return InteractionResult.SUCCESS;
 		}
 		if(!this.itemHandler.getStackInSlot(1).isEmpty()){
 			this.dropItemIndex(1, worldIn, pos);
-			return ActionResultType.SUCCESS;
+			return InteractionResult.SUCCESS;
 		}
-		return ActionResultType.PASS;
+		return InteractionResult.PASS;
 	}
 
 	/**
 	 * @return the index of the dried item dropped, else return -1.
 	 */
-	public int dropOneDriedItem(World worldIn, BlockPos pos){
+	public int dropOneDriedItem(Level worldIn, BlockPos pos){
 		if(this.itemIsDried(0)){
 			this.dropItemIndex(0, worldIn, pos);
 			return 0;
@@ -126,7 +125,7 @@ public class DryerTileEntity extends TileEntity implements ITickableTileEntity {
 		return this.remainingTicks[index] == 0;
 	}
 
-	private boolean putItemStackInFreeSpace(ItemStack itemStack, boolean simple, PlayerEntity player){
+	private boolean putItemStackInFreeSpace(ItemStack itemStack, boolean simple, Player player){
 		if(this.itemHandler.getStackInSlot(0).isEmpty()){
 			return this.putItemStackInIndex(0, itemStack, player);
 		}else if(!simple){
@@ -138,15 +137,15 @@ public class DryerTileEntity extends TileEntity implements ITickableTileEntity {
 	}
 
 	@Nullable
-	private DryerRecipe getDryerRecipe(IInventory ingredientInventory){
+	private DryerRecipe getDryerRecipe(Container ingredientInventory){
 		if(this.getLevel() != null) return this.getLevel().getRecipeManager().getRecipeFor(DryerRecipe.DRYING, ingredientInventory, this.getLevel()).orElse(null);
 		return null;
 	}
 
-	private boolean putItemStackInIndex(int index, ItemStack itemStack, PlayerEntity player){
+	private boolean putItemStackInIndex(int index, ItemStack itemStack, Player player){
 		//Tries to put the itemStack in a dryer : first we check if there is a corresponding recipe, then we set the variables.
 		if(this.getLevel() != null){
-			IInventory invInHand = new Inventory(itemStack);
+			Container invInHand = new Inventory(itemStack);
 			DryerRecipe recipe = this.getDryerRecipe(invInHand);
 			if(recipe != null && recipe.matches(invInHand, this.getLevel())){
 				this.itemHandler.setStackInSlot(index, recipe.getIngredients().get(0).getItems()[0].copy());
@@ -160,7 +159,7 @@ public class DryerTileEntity extends TileEntity implements ITickableTileEntity {
 		return false;
 	}
 
-	private void dropItemIndex(int index, World worldIn, BlockPos pos){
+	private void dropItemIndex(int index, Level worldIn, BlockPos pos){
 		popResource(worldIn, pos, this.itemHandler.extractItem(index, 64, false));
 		this.remainingTicks[index] = 0;
 		if(this.getLevel() != null){
@@ -180,15 +179,15 @@ public class DryerTileEntity extends TileEntity implements ITickableTileEntity {
 
 	@Nullable
 	@Override
-	public SUpdateTileEntityPacket getUpdatePacket() {
-		CompoundNBT tag = super.getUpdateTag();
+	public ClientboundBlockEntityDataPacket getUpdatePacket() {
+		CompoundTag tag = super.getUpdateTag();
 		tag.put("inv", itemHandler.serializeNBT());
-		return new SUpdateTileEntityPacket(this.worldPosition, 1, tag);
+		return new ClientboundBlockEntityDataPacket(this.worldPosition, 1, tag);
 	}
 
 	@Override
-	public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket pkt) {
-		CompoundNBT tag = pkt.getTag();
+	public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
+		CompoundTag tag = pkt.getTag();
 		if(tag.contains("inv") && this.getLevel() !=  null) {
 			this.itemHandler.deserializeNBT(tag.getCompound("inv"));
 			this.getLevel().sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), Constants.BlockFlags.BLOCK_UPDATE + Constants.BlockFlags.NOTIFY_NEIGHBORS);
@@ -196,20 +195,20 @@ public class DryerTileEntity extends TileEntity implements ITickableTileEntity {
 	}
 
 	@Override
-	public void handleUpdateTag(BlockState state, CompoundNBT tag) {
+	public void handleUpdateTag(BlockState state, CompoundTag tag) {
 		this.itemHandler.deserializeNBT(tag.getCompound("inv"));
 		super.handleUpdateTag(state, tag);
 	}
 
 	@Override
-	public CompoundNBT getUpdateTag() {
-		CompoundNBT tag = super.getUpdateTag();
+	public CompoundTag getUpdateTag() {
+		CompoundTag tag = super.getUpdateTag();
 		tag.put("inv", this.itemHandler.serializeNBT());
 		return tag;
 	}
 
 	@Override
-	public CompoundNBT save(CompoundNBT tag) {
+	public CompoundTag save(CompoundTag tag) {
 		tag.put("inv", itemHandler.serializeNBT());
 		for(int index = 0; index < 2; index++){
 			tag.putInt("remainingTime" + index, this.remainingTicks[index]);
@@ -218,7 +217,7 @@ public class DryerTileEntity extends TileEntity implements ITickableTileEntity {
 	}
 
 	@Override
-	public void load(BlockState state, CompoundNBT tag) {
+	public void load(BlockState state, CompoundTag tag) {
 		itemHandler.deserializeNBT(tag.getCompound("inv"));
 		for(int index = 0; index < 2; index++){
 			this.remainingTicks[index] = tag.getInt("remainingTime" + index);

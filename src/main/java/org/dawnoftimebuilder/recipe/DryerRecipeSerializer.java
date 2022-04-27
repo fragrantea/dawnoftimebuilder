@@ -2,19 +2,19 @@ package org.dawnoftimebuilder.recipe;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipeSerializer;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.item.crafting.ShapedRecipe;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.JSONUtils;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.registries.ForgeRegistryEntry;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class DryerRecipeSerializer extends ForgeRegistryEntry<IRecipeSerializer<?>> implements IRecipeSerializer<DryerRecipe> {
+public class DryerRecipeSerializer extends ForgeRegistryEntry<RecipeSerializer<?>> implements RecipeSerializer<DryerRecipe> {
 
     public static final DryerRecipeSerializer INSTANCE = new DryerRecipeSerializer();
 
@@ -27,19 +27,19 @@ public class DryerRecipeSerializer extends ForgeRegistryEntry<IRecipeSerializer<
         if (!json.has("result")) throw new JsonSyntaxException("The object 'result' is missing.");
         if(!json.get("result").isJsonObject()) throw new JsonSyntaxException("'result' is expected to be an object.");
 
-        String group = JSONUtils.getAsString(json, "group", "");
+        String group = GsonHelper.getAsString(json, "group", "");
         Ingredient ingredient = Ingredient.fromJson(json.get("ingredient"));
-        ingredient.getItems()[0].setCount(JSONUtils.getAsInt(JSONUtils.getAsJsonObject(json, "ingredient"), "count", 1));
-        ItemStack itemStackResult = ShapedRecipe.itemFromJson(JSONUtils.getAsJsonObject(json, "result"));
-        float experience = JSONUtils.getAsFloat(json, "experience", 0.0F);
-        int dryingTime = JSONUtils.getAsInt(json, "dryingTime", 1200);
+        ingredient.getItems()[0].setCount(GsonHelper.getAsInt(GsonHelper.getAsJsonObject(json, "ingredient"), "count", 1));
+        ItemStack itemStackResult = ShapedRecipe.itemFromJson(GsonHelper.getAsJsonObject(json, "result"));
+        float experience = GsonHelper.getAsFloat(json, "experience", 0.0F);
+        int dryingTime = GsonHelper.getAsInt(json, "dryingTime", 1200);
 
         return new DryerRecipe(recipeId, group, ingredient, itemStackResult, experience, dryingTime);
     }
 
     @Nullable
     @Override
-    public DryerRecipe fromNetwork(@Nonnull ResourceLocation recipeId, PacketBuffer buffer) {
+    public DryerRecipe fromNetwork(@Nonnull ResourceLocation recipeId, FriendlyByteBuf buffer) {
         String group = buffer.readUtf(32767);
         Ingredient ingredient = Ingredient.fromNetwork(buffer);
         ItemStack itemStackResult = buffer.readItem();
@@ -49,7 +49,7 @@ public class DryerRecipeSerializer extends ForgeRegistryEntry<IRecipeSerializer<
     }
 
     @Override
-    public void toNetwork(PacketBuffer buffer, DryerRecipe recipe) {
+    public void toNetwork(FriendlyByteBuf buffer, DryerRecipe recipe) {
         buffer.writeUtf(recipe.group);
         recipe.ingredient.toNetwork(buffer);
         buffer.writeItemStack(recipe.result, true);

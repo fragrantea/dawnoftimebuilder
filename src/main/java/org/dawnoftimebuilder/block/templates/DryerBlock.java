@@ -1,27 +1,25 @@
 package org.dawnoftimebuilder.block.templates;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.inventory.InventoryHelper;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.state.IntegerProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.items.CapabilityItemHandler;
 import org.dawnoftimebuilder.tileentity.DryerTileEntity;
 import org.dawnoftimebuilder.util.DoTBBlockStateProperties;
@@ -43,13 +41,13 @@ public class DryerBlock extends WaterloggedBlock {
 	}
 
 	@Override
-	protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		super.createBlockStateDefinition(builder);
 		builder.add(SIZE);
 	}
 
 	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
 		switch(state.getValue(SIZE)) {
 			default:
 			case 0:
@@ -57,12 +55,12 @@ public class DryerBlock extends WaterloggedBlock {
 			case 1:
 				return VS_DOUBLE;
 			case 2 :
-				return VoxelShapes.block();
+				return Shapes.block();
 		}
 	}
 
 	@Nullable
-	public BlockState getStateForPlacement(BlockItemUseContext context) {
+	public BlockState getStateForPlacement(BlockPlaceContext context) {
 		BlockPos pos = context.getClickedPos();
 		BlockState state = context.getLevel().getBlockState(pos);
 		if (state.getBlock() == this) {
@@ -72,7 +70,7 @@ public class DryerBlock extends WaterloggedBlock {
 	}
 
 	@Override
-	public boolean canBeReplaced(BlockState state, BlockItemUseContext useContext) {
+	public boolean canBeReplaced(BlockState state, BlockPlaceContext useContext) {
 		ItemStack itemstack = useContext.getItemInHand();
 		if(state.getValue(SIZE) == 0 && itemstack.getItem() == this.asItem()) {
 			return useContext.replacingClickedOnBlock();
@@ -81,9 +79,9 @@ public class DryerBlock extends WaterloggedBlock {
 	}
 
 	@Override
-	public void onRemove(BlockState oldState, World worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
+	public void onRemove(BlockState oldState, Level worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
 		if (oldState.getBlock() != newState.getBlock()) {
-			TileEntity tileEntity = worldIn.getBlockEntity(pos);
+			BlockEntity tileEntity = worldIn.getBlockEntity(pos);
 			if (tileEntity instanceof DryerTileEntity) {
 				tileEntity.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).ifPresent(h -> {
 					InventoryHelper.dropItemStack(worldIn, pos.getX(), pos.getY(), pos.getZ(), h.getStackInSlot(0));
@@ -95,7 +93,7 @@ public class DryerBlock extends WaterloggedBlock {
 	}
 
 	@Override
-	public boolean canSurvive(BlockState state, IWorldReader worldIn, BlockPos pos) {
+	public boolean canSurvive(BlockState state, BlockGetter worldIn, BlockPos pos) {
 		pos = pos.below();
 		BlockState stateDown = worldIn.getBlockState(pos);
 		if(stateDown.getBlock() == this){
@@ -105,7 +103,7 @@ public class DryerBlock extends WaterloggedBlock {
 	}
 
 	@Override
-	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) {
+	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, Level worldIn, BlockPos currentPos, BlockPos facingPos) {
 		stateIn = super.updateShape(stateIn, facing, facingState, worldIn, currentPos, facingPos);
 		if(facing == Direction.DOWN){
 			if(!canSurvive(stateIn,worldIn,currentPos)) return Blocks.AIR.defaultBlockState();
@@ -123,16 +121,16 @@ public class DryerBlock extends WaterloggedBlock {
 
 	@Nullable
 	@Override
-	public TileEntity createTileEntity(BlockState state, IBlockReader world){
+	public BlockEntity createTileEntity(BlockState state, BlockGetter world){
 		return DRYER_TE.get().create();
 	}
 
 	@Override
-	public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-		if(!worldIn.isClientSide() && handIn == Hand.MAIN_HAND) {
+	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
+		if(!worldIn.isClientSide() && handIn == InteractionHand.MAIN_HAND) {
 			if(worldIn.getBlockEntity(pos) instanceof DryerTileEntity) {
 				DryerTileEntity tileEntity = (DryerTileEntity) worldIn.getBlockEntity(pos);
-				if(tileEntity == null) return ActionResultType.PASS;
+				if(tileEntity == null) return InteractionResult.PASS;
 
 				if(player.isCrouching()) return tileEntity.dropOneItem(worldIn, pos);
 
@@ -141,6 +139,6 @@ public class DryerBlock extends WaterloggedBlock {
 				}
 			}
 		}
-		return ActionResultType.FAIL;
+		return InteractionResult.FAIL;
 	}
 }

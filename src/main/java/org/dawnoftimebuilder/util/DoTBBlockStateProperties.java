@@ -1,14 +1,14 @@
 package org.dawnoftimebuilder.util;
 
-import net.minecraft.block.Blocks;
+import net.minecraft.core.Direction;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.block.WallHeight;
-import net.minecraft.item.Item;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.EnumProperty;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.state.IntegerProperty;
-import net.minecraft.util.Direction;
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 
 import static org.dawnoftimebuilder.registry.DoTBItemsRegistry.GRAPE_SEEDS;
 
@@ -38,7 +38,7 @@ public class DoTBBlockStateProperties {
     public static final EnumProperty<SquareCorners> CORNER = EnumProperty.create("corner", SquareCorners.class);
     public static final EnumProperty<WallHeight> PILLAR_WALL = EnumProperty.create("pillar", WallHeight.class);
 
-    public enum HorizontalConnection implements IStringSerializable {
+    public enum HorizontalConnection implements StringRepresentable {
         NONE("none", 0),
         LEFT("left", 1),
         RIGHT("right", 2),
@@ -69,7 +69,7 @@ public class DoTBBlockStateProperties {
         }
     }
 
-    public enum VerticalConnection implements IStringSerializable {
+    public enum VerticalConnection implements StringRepresentable {
         NONE("none", 0),
         UNDER("under", 1),
         ABOVE("above", 2),
@@ -106,7 +106,7 @@ public class DoTBBlockStateProperties {
         }
     }
 
-    public enum PillarConnection implements IStringSerializable {
+    public enum PillarConnection implements StringRepresentable {
         NOTHING("nothing"),
         FOUR_PX("4_pixels"),
         SIX_PX("6_pixels"),
@@ -132,7 +132,7 @@ public class DoTBBlockStateProperties {
         }
     }
 
-    public enum FencePillar implements IStringSerializable {
+    public enum FencePillar implements StringRepresentable {
         NONE("none"),
         PILLAR_BIG("pillar_big"),
         PILLAR_SMALL("pillar_small"),
@@ -158,7 +158,7 @@ public class DoTBBlockStateProperties {
         }
     }
 
-    public enum SquareCorners implements IStringSerializable {
+    public enum SquareCorners implements StringRepresentable {
         TOP_LEFT("top_left", -1, 1),
         TOP_RIGHT("top_right", 1, 1),
         BOTTOM_RIGHT("bottom_right", 1, -1),
@@ -225,7 +225,7 @@ public class DoTBBlockStateProperties {
         }
     }
 
-    public enum OpenPosition implements IStringSerializable {
+    public enum OpenPosition implements StringRepresentable {
         CLOSED("closed"),
         HALF("half"),
         FULL("full");
@@ -252,7 +252,7 @@ public class DoTBBlockStateProperties {
         }
 	}
 
-    public enum SidedWindow implements IStringSerializable {
+    public enum SidedWindow implements StringRepresentable {
         NORTH("north", Direction.NORTH),
         EAST("east", Direction.EAST),
         SOUTH("south", Direction.SOUTH),
@@ -303,7 +303,7 @@ public class DoTBBlockStateProperties {
         }
     }
 
-    public enum ClimbingPlant implements IStringSerializable {
+    public enum ClimbingPlant implements StringRepresentable {
         NONE("none"),
         VINE("vine"),
         GRAPE("grape", true, 4, 6, 0, 2, 2);
@@ -352,7 +352,7 @@ public class DoTBBlockStateProperties {
             return this.cycle ? 6 : 2;
         }
 
-        public boolean canGrow(World worldIn, int currentAge){
+        public boolean canGrow(Level worldIn, int currentAge){
             if(!this.cycle) return false;
             if(currentAge < 2 || currentAge > 6) return false;
             currentAge -= 2;

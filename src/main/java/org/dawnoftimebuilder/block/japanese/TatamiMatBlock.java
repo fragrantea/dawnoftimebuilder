@@ -1,28 +1,33 @@
 package org.dawnoftimebuilder.block.japanese;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.block.material.PushReaction;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.inventory.InventoryHelper;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.state.*;
-import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.state.properties.Half;
-import net.minecraft.util.*;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import org.dawnoftimebuilder.block.templates.WaterloggedBlock;
 import org.dawnoftimebuilder.util.DoTBBlockStateProperties;
 import org.dawnoftimebuilder.util.DoTBBlockUtils;
@@ -30,7 +35,7 @@ import org.dawnoftimebuilder.util.DoTBBlockUtils;
 import javax.annotation.Nullable;
 import java.util.List;
 
-import static net.minecraft.block.Blocks.SPRUCE_PLANKS;
+import static net.minecraft.world.level.block.Blocks.SPRUCE_PLANKS;
 import static org.dawnoftimebuilder.registry.DoTBBlocksRegistry.TATAMI_FLOOR;
 import static org.dawnoftimebuilder.util.DoTBBlockUtils.COVERED_BLOCKS;
 
@@ -49,13 +54,13 @@ public class TatamiMatBlock extends WaterloggedBlock {
     }
 
     @Override
-    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
         builder.add(FACING, HALF, ROLLED, STACK);
     }
 
     @Override
-    public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
         if(!state.getValue(ROLLED)) return VS;
         return SHAPES[state.getValue(STACK) - 1 + state.getValue(FACING).get2DDataValue() * 3];
     }
@@ -76,8 +81,8 @@ public class TatamiMatBlock extends WaterloggedBlock {
 
     @Override
     @Nullable
-    public BlockState getStateForPlacement(BlockItemUseContext context) {
-        World world = context.getLevel();
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        Level world = context.getLevel();
         BlockPos pos = context.getClickedPos();
         BlockState oldState = world.getBlockState(pos);
         if(oldState.getBlock() == this){
@@ -94,7 +99,7 @@ public class TatamiMatBlock extends WaterloggedBlock {
     }
 
     @Override
-    public boolean canSurvive(BlockState state, IWorldReader worldIn, BlockPos pos) {
+    public boolean canSurvive(BlockState state, BlockGetter worldIn, BlockPos pos) {
         if(state.getValue(HALF) == Half.BOTTOM){
             BlockState topState = worldIn.getBlockState(pos.relative(state.getValue(FACING).getOpposite()));
             if(topState.getBlock() == this){
@@ -106,7 +111,7 @@ public class TatamiMatBlock extends WaterloggedBlock {
     }
 
     @Override
-    public void setPlacedBy(World worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
+    public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
         BlockState newState = this.tryMergingWithSprucePlanks(state, worldIn, pos);
         if(newState.getBlock() == Blocks.AIR)
             worldIn.setBlock(pos, newState, 10);
@@ -115,7 +120,7 @@ public class TatamiMatBlock extends WaterloggedBlock {
     }
 
     @Override
-    public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) {
+    public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, Level worldIn, BlockPos currentPos, BlockPos facingPos) {
         stateIn = super.updateShape(stateIn, facing, facingState, worldIn, currentPos, facingPos);
         if(facing.getAxis().isVertical()){
             return !stateIn.canSurvive(worldIn, currentPos) ? Blocks.AIR.defaultBlockState() : this.tryMergingWithSprucePlanks(stateIn, worldIn, currentPos);
@@ -147,7 +152,7 @@ public class TatamiMatBlock extends WaterloggedBlock {
         return stateIn;
     }
 
-    private BlockState tryMergingWithSprucePlanks(BlockState state, IWorld worldIn, BlockPos pos){
+    private BlockState tryMergingWithSprucePlanks(BlockState state, Level worldIn, BlockPos pos){
         if(state.getValue(ROLLED)) return state;
         Direction facing = state.getValue(FACING);
         Block blockDown = worldIn.getBlockState(pos.below()).getBlock();
@@ -161,13 +166,13 @@ public class TatamiMatBlock extends WaterloggedBlock {
     }
 
     @Override
-    public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+    public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
         if(player.isCrouching()){
             int stack = state.getValue(STACK);
             boolean isRolled = state.getValue(ROLLED);
             if(isRolled && stack == 1) {
                 if (worldIn.getBlockState(pos.below()).getBlock().is(COVERED_BLOCKS))
-                    return ActionResultType.PASS;
+                    return InteractionResult.PASS;
             }
             if(state.getValue(STACK) > 1){
                 state = state.setValue(STACK, stack - 1);
@@ -179,7 +184,7 @@ public class TatamiMatBlock extends WaterloggedBlock {
                     if(!worldIn.isEmptyBlock(pos.relative(facing)) //Check if the position for the Bottom half is free
                             || worldIn.isEmptyBlock(pos.relative(facing).below()) //Check if this position can't support tatami
                             || worldIn.getBlockState(pos.below().relative(facing)).getBlock().is(COVERED_BLOCKS)) //Check if this position is not supported by a covered block
-                        return ActionResultType.PASS;
+                        return InteractionResult.PASS;
                     worldIn.setBlock(pos.relative(facing), state.setValue(HALF, Half.BOTTOM), 2);
                 }else if(state.getValue(HALF) == Half.BOTTOM){
                     state = state.setValue(HALF, Half.TOP).setValue(FACING, facing.getOpposite());
@@ -187,14 +192,14 @@ public class TatamiMatBlock extends WaterloggedBlock {
             }
             state = this.updateShape(state, Direction.DOWN, worldIn.getBlockState(pos.below()), worldIn, pos, pos.below());
             worldIn.setBlock(pos, state, 2);
-            worldIn.playSound(player, pos, this.soundType.getPlaceSound(), SoundCategory.BLOCKS, (this.soundType.getVolume() + 1.0F) / 2.0F, this.soundType.getPitch() * 0.8F);
-            return ActionResultType.SUCCESS;
+            worldIn.playSound(player, pos, this.soundType.getPlaceSound(), SoundSource.BLOCKS, (this.soundType.getVolume() + 1.0F) / 2.0F, this.soundType.getPitch() * 0.8F);
+            return InteractionResult.SUCCESS;
         }
-        return ActionResultType.PASS;
+        return InteractionResult.PASS;
     }
 
     @Override
-    public boolean canBeReplaced(BlockState state, BlockItemUseContext useContext) {
+    public boolean canBeReplaced(BlockState state, BlockPlaceContext useContext) {
         ItemStack itemstack = useContext.getItemInHand();
         if(itemstack.getItem() == this.asItem()) {
             if(!state.getValue(ROLLED) || state.getValue(STACK) == 3)
@@ -220,7 +225,7 @@ public class TatamiMatBlock extends WaterloggedBlock {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable IBlockReader worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, @Nullable BlockGetter worldIn, List<TextComponent> tooltip, TooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         DoTBBlockUtils.addTooltip(tooltip, this);
     }

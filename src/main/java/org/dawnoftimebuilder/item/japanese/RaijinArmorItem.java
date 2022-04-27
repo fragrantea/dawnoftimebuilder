@@ -1,7 +1,7 @@
 package org.dawnoftimebuilder.item.japanese;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.dawnoftimebuilder.client.model.armor.CustomArmorModel;
@@ -12,7 +12,7 @@ import static org.dawnoftimebuilder.util.DoTBMaterials.ArmorMaterial.RAIJIN;
 
 public class RaijinArmorItem extends CustomArmorItem {
 
-	public RaijinArmorItem(EquipmentSlotType slot) {
+	public RaijinArmorItem(EquipmentSlot slot) {
 		super("raijin_armor", RAIJIN, slot);
 	}
 

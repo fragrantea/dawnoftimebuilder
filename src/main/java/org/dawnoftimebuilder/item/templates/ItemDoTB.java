@@ -1,6 +1,6 @@
 package org.dawnoftimebuilder.item.templates;
 
-import net.minecraft.item.Item;
+import net.minecraft.world.item.Item;
 
 import static org.dawnoftimebuilder.DawnOfTimeBuilder.DOTB_TAB;
 

@@ -1,23 +1,23 @@
 package org.dawnoftimebuilder.block.templates;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.EnumProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Rotation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.dawnoftimebuilder.util.DoTBBlockStateProperties;
 import org.dawnoftimebuilder.util.DoTBBlockUtils;
 
@@ -31,8 +31,8 @@ public class PortcullisBlock extends WaterloggedBlock {
 	private static final EnumProperty<Direction.Axis> HORIZONTAL_AXIS = BlockStateProperties.HORIZONTAL_AXIS;
 	private static final EnumProperty<DoTBBlockStateProperties.VerticalConnection> VERTICAL_CONNECTION = DoTBBlockStateProperties.VERTICAL_CONNECTION;
 
-	private static final VoxelShape VS_AXIS_X = net.minecraft.block.Block.box(0.0D, 0.0D, 6.0D, 16.0D, 16.0D, 10.0D);
-	private static final VoxelShape VS_AXIS_Z = net.minecraft.block.Block.box(6.0D, 0.0D, 0.0D, 10.0D, 16.0D, 16.0D);
+	private static final VoxelShape VS_AXIS_X = Block.box(0.0D, 0.0D, 6.0D, 16.0D, 16.0D, 10.0D);
+	private static final VoxelShape VS_AXIS_Z = Block.box(6.0D, 0.0D, 0.0D, 10.0D, 16.0D, 16.0D);
 
 	public PortcullisBlock(Properties properties) {
 		super(properties);
@@ -40,32 +40,32 @@ public class PortcullisBlock extends WaterloggedBlock {
 	}
 
 	@Override
-	protected void createBlockStateDefinition(StateContainer.Builder<net.minecraft.block.Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		super.createBlockStateDefinition(builder);
 		builder.add(OPEN, POWERED, HORIZONTAL_AXIS, VERTICAL_CONNECTION);
 	}
 
 	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
 		if(state.getValue(OPEN) && state.getValue(VERTICAL_CONNECTION) != DoTBBlockStateProperties.VerticalConnection.NONE && state.getValue(VERTICAL_CONNECTION) != DoTBBlockStateProperties.VerticalConnection.UNDER)
-			return VoxelShapes.empty();
+			return Shapes.empty();
 		else return (state.getValue(HORIZONTAL_AXIS) == Direction.Axis.X) ? VS_AXIS_X : VS_AXIS_Z;
 	}
 
 	@Override
-	public BlockState getStateForPlacement(BlockItemUseContext context) {
+	public BlockState getStateForPlacement(BlockPlaceContext context) {
 		BlockState state = super.getStateForPlacement(context);
 		state = state.setValue(HORIZONTAL_AXIS, (context.getHorizontalDirection().getAxis() == Direction.Axis.X) ? Direction.Axis.Z : Direction.Axis.X);
 		return this.getShape(state, context.getLevel(), context.getClickedPos());
 	}
 
 	@Override
-	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) {
+	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, Level worldIn, BlockPos currentPos, BlockPos facingPos) {
 		stateIn = super.updateShape(stateIn, facing, facingState, worldIn, currentPos, facingPos);
 		return this.getShape(stateIn, worldIn, currentPos);
 	}
 
-	private BlockState getShape(BlockState state, IWorld worldIn, BlockPos pos){
+	private BlockState getShape(BlockState state, Level worldIn, BlockPos pos){
 		Direction.Axis axis = state.getValue(HORIZONTAL_AXIS);
 		if(hasSameAxis(worldIn.getBlockState(pos.above()), axis)){
 			return state.setValue(VERTICAL_CONNECTION, (hasSameAxis(worldIn.getBlockState(pos.below()), axis)) ? DoTBBlockStateProperties.VerticalConnection.BOTH : DoTBBlockStateProperties.VerticalConnection.ABOVE);
@@ -81,7 +81,7 @@ public class PortcullisBlock extends WaterloggedBlock {
 	}
 
 	@Override
-	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, net.minecraft.block.Block blockIn, BlockPos fromPos, boolean isMoving) {
+	public void neighborChanged(BlockState state, Level worldIn, BlockPos pos, Block blockIn, BlockPos fromPos, boolean isMoving) {
 		if (state.getValue(VERTICAL_CONNECTION) == DoTBBlockStateProperties.VerticalConnection.UNDER) {
 			//update coming from top blocks : check the shape of whole portcullis to know if it can be or stay open
 			Direction.Axis axis = state.getValue(HORIZONTAL_AXIS);
@@ -122,7 +122,7 @@ public class PortcullisBlock extends WaterloggedBlock {
 		return (axis == Direction.Axis.X) ? fromPos.getZ() == pos.getZ() : fromPos.getX() == pos.getX();
 	}
 
-	private BlockPos getTopPortcullisPos(World worldIn, BlockPos pos, Direction.Axis axis){
+	private BlockPos getTopPortcullisPos(Level worldIn, BlockPos pos, Direction.Axis axis){
 		BlockState state;
 		for (boolean isStillPortcullis = true; isStillPortcullis; pos = pos.above()) {
 			state = worldIn.getBlockState(pos);
@@ -133,7 +133,7 @@ public class PortcullisBlock extends WaterloggedBlock {
 		return pos.below();
 	}
 
-	private boolean hasAnotherPowerSource(World worldIn, BlockPos pos, Direction.Axis axis){
+	private boolean hasAnotherPowerSource(Level worldIn, BlockPos pos, Direction.Axis axis){
 		boolean isAxisX = axis == Direction.Axis.X;
 		Direction direction = (isAxisX) ? Direction.WEST : Direction.NORTH;
 		int widthLeft = getPortcullisWidth(worldIn, pos, axis, (isAxisX) ? Direction.EAST : Direction.SOUTH);
@@ -147,7 +147,7 @@ public class PortcullisBlock extends WaterloggedBlock {
 		return false;
 	}
 
-	private void setOpenState(World worldIn, BlockPos pos, Direction.Axis axis, boolean openState){
+	private void setOpenState(Level worldIn, BlockPos pos, Direction.Axis axis, boolean openState){
 		boolean isAxisX = axis == Direction.Axis.X;
 		Direction direction = (isAxisX) ? Direction.WEST : Direction.NORTH;
 		int height = getPortcullisHeight(worldIn, pos, axis);
@@ -214,7 +214,7 @@ public class PortcullisBlock extends WaterloggedBlock {
 		}
 	}
 
-	private int getPortcullisHeight(World worldIn, BlockPos pos, Direction.Axis axis){
+	private int getPortcullisHeight(Level worldIn, BlockPos pos, Direction.Axis axis){
 		int height = 0;
 		BlockState state;
 		for (boolean isSamePortcullis = true; isSamePortcullis; height++) {
@@ -227,7 +227,7 @@ public class PortcullisBlock extends WaterloggedBlock {
 		return height;
 	}
 
-	private int getPortcullisWidth(World worldIn, BlockPos pos, Direction.Axis axis, Direction direction){
+	private int getPortcullisWidth(Level worldIn, BlockPos pos, Direction.Axis axis, Direction direction){
 		int width = 0;
 		BlockState state;
 		for (boolean isSamePortcullis = true; isSamePortcullis; width++) {
@@ -240,7 +240,7 @@ public class PortcullisBlock extends WaterloggedBlock {
 		return (width - 1);
 	}
 
-	private boolean isCorrectBorder(World worldIn, BlockPos pos, Direction.Axis axis, Direction direction, int length){
+	private boolean isCorrectBorder(Level worldIn, BlockPos pos, Direction.Axis axis, Direction direction, int length){
 		BlockState state;
 		for(int i = 0; i <= length; i++){
 			state = worldIn.getBlockState(pos.relative(direction, i));
@@ -267,7 +267,7 @@ public class PortcullisBlock extends WaterloggedBlock {
 	}
 
 	@Override
-	public void appendHoverText(ItemStack stack, @Nullable IBlockReader worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+	public void appendHoverText(ItemStack stack, @Nullable BlockGetter worldIn, List<TextComponent> tooltip, TooltipFlag flagIn) {
 		super.appendHoverText(stack, worldIn, tooltip, flagIn);
 		DoTBBlockUtils.addTooltip(tooltip, this);
 	}

@@ -1,20 +1,20 @@
 package org.dawnoftimebuilder.client.model.armor;
 
-import net.minecraft.client.renderer.entity.model.BipedModel;
+import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.entity.item.ArmorStandEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-public abstract class CustomArmorModel<T extends LivingEntity> extends BipedModel<T> {
+public abstract class CustomArmorModel<T extends LivingEntity> extends HumanoidModel<T> {
 
-	public final EquipmentSlotType slot;
+	public final EquipmentSlot slot;
 
-	public CustomArmorModel(EquipmentSlotType slot, int textureWidthIn, int textureHeightIn){
+	public CustomArmorModel(EquipmentSlot slot, int textureWidthIn, int textureHeightIn){
 		super(0.0F, 0.0F, textureWidthIn, textureHeightIn);
 		this.slot = slot;
 	}
@@ -57,6 +57,6 @@ public abstract class CustomArmorModel<T extends LivingEntity> extends BipedMode
 	}
 
 	public static float sinPI(float f) {
-		return MathHelper.sin(f * (float)Math.PI);
+		return Mth.sin(f * (float)Math.PI);
 	}
 }

@@ -1,19 +1,19 @@
 package org.dawnoftimebuilder.block.japanese;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.dawnoftimebuilder.block.templates.ChairBlock;
 import org.dawnoftimebuilder.util.DoTBBlockUtils;
 
 public class SpruceLeglessChairBlock extends ChairBlock {
 
 	private static final VoxelShape[] VS = DoTBBlockUtils.GenerateHorizontalShapes(new VoxelShape[]{
-			VoxelShapes.or(
+			Shapes.or(
 					Block.box(2.0D, 0.0D, 0.0D, 14.0D, 3.0D, 16.0D),
 					Block.box(2.0D, 3.0D, 0.0D, 14.0D, 11.0D, 4.0D))});
 
@@ -22,7 +22,7 @@ public class SpruceLeglessChairBlock extends ChairBlock {
 	}
 
 	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
 		return VS[state.getValue(FACING).get2DDataValue()];
 	}
 }

@@ -4,9 +4,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.inventory.CreativeScreen;
 import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -43,14 +43,14 @@ public class CreativeInventoryEvents {
 			this.guiCenterY = ((CreativeScreen) event.getGui()).getGuiTop();
 			this.buttons = new ArrayList<>();
 
-			event.addWidget(this.btnScrollUp = new GroupButton(this.guiCenterX - 22, this.guiCenterY - 22, StringTextComponent.EMPTY, button -> {
+			event.addWidget(this.btnScrollUp = new GroupButton(this.guiCenterX - 22, this.guiCenterY - 22, TextComponent.EMPTY, button -> {
 				if(page > 0){
 					page--;
 					this.updateCategoryButtons();
 				}
 			}, CREATIVE_ICONS, 0, 56));
 
-			event.addWidget(this.btnScrollDown = new GroupButton(this.guiCenterX - 22, this.guiCenterY + 120, StringTextComponent.EMPTY, button -> {
+			event.addWidget(this.btnScrollDown = new GroupButton(this.guiCenterX - 22, this.guiCenterY + 120, TextComponent.EMPTY, button -> {
 				if(page < MAX_PAGE){
 					page++;
 					this.updateCategoryButtons();

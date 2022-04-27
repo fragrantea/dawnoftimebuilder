@@ -1,13 +1,13 @@
 package org.dawnoftimebuilder.block.german;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.dawnoftimebuilder.block.IBlockChain;
@@ -17,7 +17,7 @@ import java.util.Random;
 
 public class WaxedOakChandelierBlock extends CandleLampBlock implements IBlockChain {
 
-    private static final VoxelShape VS = VoxelShapes.or(
+    private static final VoxelShape VS = Shapes.or(
             Block.box(0.0D, 0.0D, 0.0D, 16.0D, 8.0D, 16.0D),
             Block.box(6.0D, 8.0D, 6.0D, 10.0D, 16.0D, 10.0D));
 
@@ -26,13 +26,13 @@ public class WaxedOakChandelierBlock extends CandleLampBlock implements IBlockCh
     }
 
     @Override
-    public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
         return VS;
     }
 
     @OnlyIn(Dist.CLIENT)
     @Override
-    public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
+    public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, Random rand) {
         this.animateLitCandle(stateIn, worldIn, pos, 0.12D, 0.5D, 0.5D);
         this.animateLitCandle(stateIn, worldIn, pos, 0.5D, 0.5D, 0.12D);
         this.animateLitCandle(stateIn, worldIn, pos, 0.5D, 0.5D, 0.88D);

@@ -1,28 +1,26 @@
 package org.dawnoftimebuilder.block.roman;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.particles.ParticleTypes;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.state.IntegerProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.dawnoftimebuilder.block.IBlockGeneration;
@@ -51,12 +49,12 @@ public class CypressBlock extends BlockDoTB implements IBlockGeneration {
     }
 
     @Override
-    public boolean canSurvive(BlockState state, IWorldReader worldIn, BlockPos pos) {
+    public boolean canSurvive(BlockState state, BlockGetter worldIn, BlockPos pos) {
         return canSupportCenter(worldIn, pos.below(), Direction.UP) || worldIn.getBlockState(pos.below()).getBlock() == this;
     }
 
     @Override
-    public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+    public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
         ItemStack heldItemStack = player.getItemInHand(handIn);
         if(player.isCrouching()) {
             //We remove the highest CypressBlock
@@ -68,7 +66,7 @@ public class CypressBlock extends BlockDoTB implements IBlockGeneration {
                         Block.dropResources(state, worldIn, pos, null, player, heldItemStack);
                     }
                 }
-                return ActionResultType.SUCCESS;
+                return InteractionResult.SUCCESS;
             }
         }else{
             if(!heldItemStack.isEmpty() && heldItemStack.getItem() == this.asItem()){
@@ -81,14 +79,14 @@ public class CypressBlock extends BlockDoTB implements IBlockGeneration {
                             heldItemStack.shrink(1);
                         }
                     }
-                    return ActionResultType.SUCCESS;
+                    return InteractionResult.SUCCESS;
                 }
             }
         }
         return super.use(state, worldIn, pos, player, handIn, hit);
     }
 
-    private BlockPos getHighestCypressPos(World worldIn, BlockPos pos){
+    private BlockPos getHighestCypressPos(Level worldIn, BlockPos pos){
         int yOffset;
         for(yOffset = 0; yOffset + pos.getY() <= HIGHEST_Y; yOffset++){
             if(worldIn.getBlockState(pos.above(yOffset)).getBlock() != this) break;
@@ -97,7 +95,7 @@ public class CypressBlock extends BlockDoTB implements IBlockGeneration {
     }
 
     @Override
-    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(SIZE);
     }
 
@@ -106,7 +104,7 @@ public class CypressBlock extends BlockDoTB implements IBlockGeneration {
     }
 
     @Override
-    public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
         switch (state.getValue(SIZE)) {
             case 0:
                 return VS_0;
@@ -119,18 +117,18 @@ public class CypressBlock extends BlockDoTB implements IBlockGeneration {
             case 4:
                 return VS_3_4;
             case 5:
-                return VoxelShapes.block();
+                return Shapes.block();
         }
     }
 
     @Override
-    public VoxelShape getBlockSupportShape(BlockState p_230335_1_, IBlockReader p_230335_2_, BlockPos p_230335_3_) {
-        return VoxelShapes.empty();
+    public VoxelShape getBlockSupportShape(BlockState p_230335_1_, BlockGetter p_230335_2_, BlockPos p_230335_3_) {
+        return Shapes.empty();
     }
 
     @Nullable
     @Override
-    public BlockState getStateForPlacement(BlockItemUseContext context) {
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState adjacentState = context.getLevel().getBlockState(context.getClickedPos().above());
         int size = (adjacentState.getBlock() == this) ? Math.min(adjacentState.getValue(SIZE) + 1, 5) : 1;
         if(size < 3) return this.defaultBlockState().setValue(SIZE, size);
@@ -141,7 +139,7 @@ public class CypressBlock extends BlockDoTB implements IBlockGeneration {
     }
 
     @Override
-    public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) {
+    public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, Level worldIn, BlockPos currentPos, BlockPos facingPos) {
         if(facing.getAxis().isVertical()){
             if(!canSurvive(stateIn, worldIn, currentPos)) return Blocks.AIR.defaultBlockState();
             BlockState adjacentState = worldIn.getBlockState(currentPos.above());
@@ -155,7 +153,7 @@ public class CypressBlock extends BlockDoTB implements IBlockGeneration {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
+    public void animateTick(BlockState stateIn, Level worldIn, BlockPos pos, Random rand) {
         if (worldIn.isRainingAt(pos.above())) {
             if (rand.nextInt(15) == 1) {
                 BlockPos posDown = pos.below();
@@ -171,13 +169,13 @@ public class CypressBlock extends BlockDoTB implements IBlockGeneration {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable IBlockReader worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, @Nullable BlockGetter worldIn, List<TextComponent> tooltip, TooltipFlag flagIn) {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         DoTBBlockUtils.addTooltip(tooltip, TOOLTIP_COLUMN);
     }
 
     @Override
-    public void generateOnPos(IWorld world, BlockPos pos, BlockState state, Random random) {
+    public void generateOnPos(Level world, BlockPos pos, BlockState state, Random random) {
         int maxSize = 2 + random.nextInt(5);
         world.setBlock(pos, state.setValue(SIZE, 0), 2);
         int size = 1;

@@ -1,10 +1,10 @@
 package org.dawnoftimebuilder.block;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorld;
 import org.dawnoftimebuilder.util.DoTBBlockStateProperties;
 
 import javax.annotation.Nonnull;
@@ -17,7 +17,7 @@ public interface IBlockPillar {
 	 * @param pos Position of the block
 	 * @return PillarConnection of the Block toward the block above it.
 	 */
-	static DoTBBlockStateProperties.PillarConnection getPillarConnectionAbove(IWorld worldIn, BlockPos pos){
+	static DoTBBlockStateProperties.PillarConnection getPillarConnectionAbove(Level worldIn, BlockPos pos){
 		BlockState state = worldIn.getBlockState(pos);
 		Block block = state.getBlock();
 		if(block instanceof IBlockPillar) return ((IBlockPillar) block).getBlockPillarConnectionAbove(state);
@@ -32,7 +32,7 @@ public interface IBlockPillar {
 	 * @param pos Position of the block
 	 * @return PillarConnection of the Block toward the block under it.
 	 */
-	static DoTBBlockStateProperties.PillarConnection getPillarConnectionUnder(IWorld worldIn, BlockPos pos){
+	static DoTBBlockStateProperties.PillarConnection getPillarConnectionUnder(Level worldIn, BlockPos pos){
 		BlockState state = worldIn.getBlockState(pos);
 		Block block = state.getBlock();
 		if(block instanceof IBlockPillar) return ((IBlockPillar) block).getBlockPillarConnectionAbove(state);

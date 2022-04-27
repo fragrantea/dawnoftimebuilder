@@ -2,27 +2,28 @@ package org.dawnoftimebuilder.block.templates;
 
 import com.google.common.collect.ImmutableMap;
 import net.minecraft.block.*;
-import net.minecraft.fluid.FluidState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.state.properties.*;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.fluid.Fluids;
-import net.minecraft.item.BlockItemUseContext;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.pathfinding.PathType;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.EnumProperty;
-import net.minecraft.state.Property;
-import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.Direction;
 import net.minecraft.util.Mirror;
-import net.minecraft.util.Rotation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.IBooleanFunction;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.phys.shapes.*;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.IronBarsBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.dawnoftimebuilder.util.DoTBBlockStateProperties;
 
 import java.util.Map;
@@ -52,9 +53,9 @@ public class CappedWallBlock extends Block implements IWaterLoggable {
 
     private static VoxelShape applyWallShape(VoxelShape mainShape, WallHeight height, VoxelShape newShape, VoxelShape p_235631_3_) {
         if (height == WallHeight.TALL) {
-            return VoxelShapes.or(mainShape, p_235631_3_);
+            return Shapes.or(mainShape, p_235631_3_);
         } else {
-            return height == WallHeight.LOW ? VoxelShapes.or(mainShape, newShape) : mainShape;
+            return height == WallHeight.LOW ? Shapes.or(mainShape, newShape) : mainShape;
         }
     }
 
@@ -79,13 +80,13 @@ public class CappedWallBlock extends Block implements IWaterLoggable {
                 for(WallHeight northState : NORTH_WALL.getPossibleValues()) {
                     for(WallHeight westState : WEST_WALL.getPossibleValues()) {
                         for(WallHeight southState : SOUTH_WALL.getPossibleValues()) {
-                            VoxelShape mainShape = VoxelShapes.empty();
+                            VoxelShape mainShape = Shapes.empty();
                             mainShape = applyWallShape(mainShape, eastState, voxelshape4, voxelshape8);
                             mainShape = applyWallShape(mainShape, westState, voxelshape3, voxelshape7);
                             mainShape = applyWallShape(mainShape, northState, voxelshape1, voxelshape5);
                             mainShape = applyWallShape(mainShape, southState, voxelshape2, voxelshape6);
                             if (pillarStates != WallHeight.NONE) {
-                                mainShape = VoxelShapes.or(mainShape, voxelshape);
+                                mainShape = Shapes.or(mainShape, voxelshape);
                             }
 
                             BlockState blockstate = this.defaultBlockState().setValue(PILLAR, pillarStates).setValue(EAST_WALL, eastState).setValue(WEST_WALL, westState).setValue(NORTH_WALL, northState).setValue(SOUTH_WALL, southState);
@@ -99,26 +100,26 @@ public class CappedWallBlock extends Block implements IWaterLoggable {
         return builder.build();
     }
 
-    public VoxelShape getShape(BlockState state, IBlockReader world, BlockPos pos, ISelectionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
         return this.shapeByIndex.get(state);
     }
 
-    public VoxelShape getCollisionShape(BlockState state, IBlockReader world, BlockPos pos, ISelectionContext context) {
+    public VoxelShape getCollisionShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
         return this.collisionShapeByIndex.get(state);
     }
 
-    public boolean isPathfindable(BlockState state, IBlockReader world, BlockPos pos, PathType pathType) {
+    public boolean isPathfindable(BlockState state, BlockGetter world, BlockPos pos, PathType pathType) {
         return false;
     }
 
     private boolean connectsTo(BlockState state, boolean p_220113_2_, Direction direction) {
         Block block = state.getBlock();
         boolean flag = block instanceof FenceGateBlock && FenceGateBlock.connectsToDirection(state, direction);
-        return state.is(BlockTags.WALLS) || !isExceptionForConnection(block) && p_220113_2_ || block instanceof PaneBlock || flag;
+        return state.is(BlockTags.WALLS) || !isExceptionForConnection(block) && p_220113_2_ || block instanceof IronBarsBlock || flag;
     }
 
-    public BlockState getStateForPlacement(BlockItemUseContext context) {
-        IWorldReader world = context.getLevel();
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        BlockGetter world = context.getLevel();
         BlockPos clickedPos = context.getClickedPos();
         FluidState fluidstate = context.getLevel().getFluidState(context.getClickedPos());
         BlockPos posNorth = clickedPos.north();
@@ -139,7 +140,7 @@ public class CappedWallBlock extends Block implements IWaterLoggable {
         return this.updateShape(world, state, posAbove, blockstate4, connectsSouth, connectsWest, connectsNorth, connectsEast);
     }
 
-    public BlockState updateShape(BlockState state, Direction direction, BlockState p_196271_3_, IWorld world, BlockPos pos, BlockPos p_196271_6_) {
+    public BlockState updateShape(BlockState state, Direction direction, BlockState p_196271_3_, Level world, BlockPos pos, BlockPos p_196271_6_) {
         if (state.getValue(WATERLOGGED)) {
             world.getLiquidTicks().scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
         }
@@ -156,10 +157,10 @@ public class CappedWallBlock extends Block implements IWaterLoggable {
     }
 
     private static boolean isCovered(VoxelShape p_235632_0_, VoxelShape p_235632_1_) {
-        return !VoxelShapes.joinIsNotEmpty(p_235632_1_, p_235632_0_, IBooleanFunction.ONLY_FIRST);
+        return !Shapes.joinIsNotEmpty(p_235632_1_, p_235632_0_, BooleanOp.ONLY_FIRST);
     }
 
-    private BlockState topUpdate(IWorldReader p_235625_1_, BlockState p_235625_2_, BlockPos p_235625_3_, BlockState p_235625_4_) {
+    private BlockState topUpdate(BlockGetter p_235625_1_, BlockState p_235625_2_, BlockPos p_235625_3_, BlockState p_235625_4_) {
         boolean flag = isConnected(p_235625_2_, NORTH_WALL);
         boolean flag1 = isConnected(p_235625_2_, EAST_WALL);
         boolean flag2 = isConnected(p_235625_2_, SOUTH_WALL);
@@ -167,7 +168,7 @@ public class CappedWallBlock extends Block implements IWaterLoggable {
         return this.updateShape(p_235625_1_, p_235625_2_, p_235625_3_, p_235625_4_, flag, flag1, flag2, flag3);
     }
 
-    private BlockState sideUpdate(IWorldReader p_235627_1_, BlockPos p_235627_2_, BlockState p_235627_3_, BlockPos p_235627_4_, BlockState p_235627_5_, Direction p_235627_6_) {
+    private BlockState sideUpdate(BlockGetter p_235627_1_, BlockPos p_235627_2_, BlockState p_235627_3_, BlockPos p_235627_4_, BlockState p_235627_5_, Direction p_235627_6_) {
         Direction direction = p_235627_6_.getOpposite();
         boolean flag = p_235627_6_ == Direction.NORTH ? this.connectsTo(p_235627_5_, p_235627_5_.isFaceSturdy(p_235627_1_, p_235627_4_, direction), direction) : isConnected(p_235627_3_, NORTH_WALL);
         boolean flag1 = p_235627_6_ == Direction.EAST ? this.connectsTo(p_235627_5_, p_235627_5_.isFaceSturdy(p_235627_1_, p_235627_4_, direction), direction) : isConnected(p_235627_3_, EAST_WALL);
@@ -178,7 +179,7 @@ public class CappedWallBlock extends Block implements IWaterLoggable {
         return this.updateShape(p_235627_1_, p_235627_3_, blockpos, blockstate, flag, flag1, flag2, flag3);
     }
 
-    private BlockState updateShape(IWorldReader world, BlockState state, BlockPos pos, BlockState stateTop, boolean p_235626_5_, boolean p_235626_6_, boolean p_235626_7_, boolean p_235626_8_) {
+    private BlockState updateShape(BlockGetter world, BlockState state, BlockPos pos, BlockState stateTop, boolean p_235626_5_, boolean p_235626_6_, boolean p_235626_7_, boolean p_235626_8_) {
         VoxelShape voxelshape = stateTop.getCollisionShape(world, pos).getFaceShape(Direction.DOWN);
         BlockState blockstate = this.updateSides(state, p_235626_5_, p_235626_6_, p_235626_7_, p_235626_8_, voxelshape);
         return blockstate.setValue(PILLAR, this.shouldRaisePost(blockstate, stateTop, voxelshape));
@@ -231,11 +232,11 @@ public class CappedWallBlock extends Block implements IWaterLoggable {
         return state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : super.getFluidState(state);
     }
 
-    public boolean propagatesSkylightDown(BlockState state, IBlockReader world, BlockPos pos) {
+    public boolean propagatesSkylightDown(BlockState state, BlockGetter world, BlockPos pos) {
         return !state.getValue(WATERLOGGED);
     }
 
-    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> container) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> container) {
         container.add(PILLAR, NORTH_WALL, EAST_WALL, WEST_WALL, SOUTH_WALL, WATERLOGGED);
     }
 

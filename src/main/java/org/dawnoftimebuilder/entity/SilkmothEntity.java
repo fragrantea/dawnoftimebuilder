@@ -1,44 +1,39 @@
 package org.dawnoftimebuilder.entity;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.Pose;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.passive.AmbientEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.phys.Vec3;
 import org.dawnoftimebuilder.DoTBConfig;
 import org.dawnoftimebuilder.block.templates.DoubleGrowingBushBlock;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import static org.dawnoftimebuilder.registry.DoTBBlocksRegistry.MULBERRY;
 import static org.dawnoftimebuilder.registry.DoTBEntitiesRegistry.SILKMOTH_ENTITY;
 
 public class SilkmothEntity extends AmbientEntity {
 
-	private static final DataParameter<BlockPos> ROTATION_POS = EntityDataManager.defineId(SilkmothEntity.class, DataSerializers.BLOCK_POS);
-	private static final DataParameter<Boolean> CLOCKWISE = EntityDataManager.defineId(SilkmothEntity.class, DataSerializers.BOOLEAN);
-	private static final DataParameter<Float> DISTANCE = EntityDataManager.defineId(SilkmothEntity.class, DataSerializers.FLOAT);
+	private static final EntityDataAccessor<BlockPos> ROTATION_POS = SynchedEntityData.defineId(SilkmothEntity.class, EntityDataSerializers.BLOCK_POS);
+	private static final EntityDataAccessor<Boolean> CLOCKWISE = SynchedEntityData.defineId(SilkmothEntity.class, EntityDataSerializers.BOOLEAN);
+	private static final EntityDataAccessor<Float> DISTANCE = SynchedEntityData.defineId(SilkmothEntity.class, EntityDataSerializers.FLOAT);
 
-	public SilkmothEntity(World worldIn) {
+	public SilkmothEntity(Level worldIn) {
 		super(SILKMOTH_ENTITY.get(), worldIn);
 	}
 
@@ -80,10 +75,10 @@ public class SilkmothEntity extends AmbientEntity {
 		d = - distance * 2 / (d + distance) + 1;
 		alpha += (this.getEntityData().get(CLOCKWISE) ? d - 1 : 1 - d) * Math.PI / 2;
 
-		Vector3d motionVector = this.getDeltaMovement();
+		Vec3 motionVector = this.getDeltaMovement();
 		this.setDeltaMovement(motionVector.x * 0.5D + Math.cos(alpha) * 0.15D, Math.sin(this.tickCount / 20.0D) * 0.05D, motionVector.z * 0.5D + Math.sin(alpha) * 0.15D);
 
-		this.yHeadRot = (float) MathHelper.wrapDegrees(180.0D * alpha / Math.PI - 90.0D);
+		this.yHeadRot = (float) Mth.wrapDegrees(180.0D * alpha / Math.PI - 90.0D);
 	}
 
 	private void changeRotationPos(){
@@ -198,7 +193,7 @@ public class SilkmothEntity extends AmbientEntity {
 	}
 
 	@Override
-	public void readAdditionalSaveData(CompoundNBT compound) {
+	public void readAdditionalSaveData(CompoundTag compound) {
 		super.readAdditionalSaveData(compound);
 		this.getEntityData().set(ROTATION_POS, new BlockPos(compound.getInt("RotationX"), compound.getInt("RotationY"), compound.getInt("RotationZ")));
 		this.getEntityData().set(CLOCKWISE, compound.getBoolean("RotationClockwise"));
@@ -206,7 +201,7 @@ public class SilkmothEntity extends AmbientEntity {
 	}
 
 	@Override
-	public void addAdditionalSaveData(CompoundNBT compound) {
+	public void addAdditionalSaveData(CompoundTag compound) {
 		super.addAdditionalSaveData(compound);
 		compound.putInt("RotationX", this.getEntityData().get(ROTATION_POS).getX());
 		compound.putInt("RotationY", this.getEntityData().get(ROTATION_POS).getY());

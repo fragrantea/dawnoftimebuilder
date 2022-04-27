@@ -1,15 +1,14 @@
 package org.dawnoftimebuilder.tileentity;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.INamedContainerProvider;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
@@ -21,7 +20,7 @@ import javax.annotation.Nullable;
 
 import static org.dawnoftimebuilder.registry.DoTBTileEntitiesRegistry.DISPLAYER_TE;
 
-public class DisplayerTileEntity extends TileEntity implements INamedContainerProvider {
+public class DisplayerTileEntity extends BlockEntity implements INamedContainerProvider {
 
 	private final ItemStackHandler itemHandler = createHandler();
 
@@ -39,26 +38,26 @@ public class DisplayerTileEntity extends TileEntity implements INamedContainerPr
 	}
 
 	@Override
-	public CompoundNBT getUpdateTag() {
-		CompoundNBT tag = super.getUpdateTag();
+	public CompoundTag getUpdateTag() {
+		CompoundTag tag = super.getUpdateTag();
 		tag.put("inv", itemHandler.serializeNBT());
 		return tag;
 	}
 	@Override
-	public void handleUpdateTag(BlockState state, CompoundNBT tag) {
+	public void handleUpdateTag(BlockState state, CompoundTag tag) {
 		//Only on client side
 		itemHandler.deserializeNBT(tag.getCompound("inv"));
 		super.handleUpdateTag(state, tag);
 	}
 
 	@Override
-	public CompoundNBT save(CompoundNBT tag) {
+	public CompoundTag save(CompoundTag tag) {
 		tag.put("inv", itemHandler.serializeNBT());
 		return super.save(tag);
 	}
 
 	@Override
-	public void load(BlockState state, CompoundNBT tag) {
+	public void load(BlockState state, CompoundTag tag) {
 		itemHandler.deserializeNBT(tag.getCompound("inv"));
 		super.load(state, tag);
 	}
@@ -73,13 +72,13 @@ public class DisplayerTileEntity extends TileEntity implements INamedContainerPr
 	}
 
 	@Override
-	public ITextComponent getDisplayName() {
-		return new StringTextComponent(this.getType().getRegistryName().getPath());
+	public TextComponent getDisplayName() {
+		return new TextComponent(this.getType().getRegistryName().getPath());
 	}
 
 	@Nullable
 	@Override
-	public Container createMenu(int windowID, PlayerInventory playerInventory, PlayerEntity playerEntity) {
+	public Container createMenu(int windowID, Inventory playerInventory, Player playerEntity) {
 		if(this.getLevel() == null) return null;
 		return new DisplayerContainer(windowID, playerInventory, this.getLevel(), this.getBlockPos());
 	}

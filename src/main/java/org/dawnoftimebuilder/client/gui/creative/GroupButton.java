@@ -1,11 +1,11 @@
 package org.dawnoftimebuilder.client.gui.creative;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -15,7 +15,7 @@ public class GroupButton extends Button{
 	private final int iconU;
 	private final int iconV;
 
-	public GroupButton(int x, int y, ITextComponent message, IPressable pressable, ResourceLocation iconResource, int iconU, int iconV){
+	public GroupButton(int x, int y, TextComponent message, IPressable pressable, ResourceLocation iconResource, int iconU, int iconV){
 		super(x, y, 20, 20, message, pressable);
 		this.iconResource = iconResource;
 		this.iconU = iconU;
@@ -23,7 +23,7 @@ public class GroupButton extends Button{
 	}
 
 	@Override
-	public void renderButton(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks){
+	public void renderButton(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks){
 		Minecraft.getInstance().getTextureManager().bind(WIDGETS_LOCATION);
 		RenderSystem.disableLighting();
 		RenderSystem.color3f(1F, 1F, 1F);

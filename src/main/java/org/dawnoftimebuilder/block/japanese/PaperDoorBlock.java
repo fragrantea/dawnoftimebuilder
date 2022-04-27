@@ -1,12 +1,12 @@
 package org.dawnoftimebuilder.block.japanese;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.state.properties.DoorHingeSide;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.level.BlockGetter;
 import org.dawnoftimebuilder.block.templates.DoorBlockDoTB;
 import org.dawnoftimebuilder.util.DoTBBlockUtils;
 
@@ -21,7 +21,7 @@ public class PaperDoorBlock extends DoorBlockDoTB {
     }
 
     @Override
-    public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
         return state.getValue(OPEN) ? VS_NORTH_OPEN[state.getValue(HINGE) == DoorHingeSide.LEFT ? state.getValue(FACING).getOpposite().get2DDataValue() : state.getValue(FACING).get2DDataValue()] : VS_NORTH[state.getValue(FACING).get2DDataValue()];
     }
 }

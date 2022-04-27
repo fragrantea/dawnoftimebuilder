@@ -1,7 +1,7 @@
 package org.dawnoftimebuilder.item.egyptian;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.dawnoftimebuilder.client.model.armor.CustomArmorModel;
@@ -12,7 +12,7 @@ import static org.dawnoftimebuilder.util.DoTBMaterials.ArmorMaterial.PHARAOH;
 
 public class PharaohArmorItem extends CustomArmorItem {
 
-	public PharaohArmorItem(EquipmentSlotType slot) {
+	public PharaohArmorItem(EquipmentSlot slot) {
 		super("pharaoh_armor", PHARAOH, slot);
 	}
 

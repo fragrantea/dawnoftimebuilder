@@ -1,24 +1,24 @@
 package org.dawnoftimebuilder.block.templates;
 
 import net.minecraft.advancements.CriteriaTriggers;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.SlabBlock;
-import net.minecraft.block.SoundType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.properties.SlabType;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.properties.SlabType;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import org.dawnoftimebuilder.block.IBlockCustomItem;
 
 import javax.annotation.Nullable;
@@ -60,7 +60,7 @@ public class MixedSlabBlock extends SlabBlockDoTB implements IBlockCustomItem {
 
 
 	@Override
-	public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
 		Direction facing = hit.getDirection();
 		ItemStack itemStack = player.getItemInHand(handIn);
 		if(!player.isCrouching() && player.mayUseItemAt(pos, facing, itemStack) && facing.getAxis().isVertical() && !itemStack.isEmpty()){
@@ -70,14 +70,14 @@ public class MixedSlabBlock extends SlabBlockDoTB implements IBlockCustomItem {
 						BlockState madeState = recipe.getMixedBlock().defaultBlockState();
 						if(worldIn.setBlock(pos, madeState, 11))  {
 							this.setPlacedBy(worldIn, pos, state, player, itemStack);
-							if (player instanceof ServerPlayerEntity) {
-								CriteriaTriggers.PLACED_BLOCK.trigger((ServerPlayerEntity)player, pos, itemStack);
+							if (player instanceof ServerPlayer) {
+								CriteriaTriggers.PLACED_BLOCK.trigger((ServerPlayer)player, pos, itemStack);
 							}
 							SoundType soundtype = recipe.getMixedBlock().getSoundType(state, worldIn, pos, player);
-							worldIn.playSound(player, pos, soundtype.getPlaceSound(), SoundCategory.BLOCKS, (soundtype.getVolume() + 1.0F) / 2.0F, soundtype.getPitch() * 0.8F);
+							worldIn.playSound(player, pos, soundtype.getPlaceSound(), SoundSource.BLOCKS, (soundtype.getVolume() + 1.0F) / 2.0F, soundtype.getPitch() * 0.8F);
 							if(!player.isCreative())
 								itemStack.shrink(1);
-							return ActionResultType.SUCCESS;
+							return InteractionResult.SUCCESS;
 						}
 					}
 				}
@@ -91,14 +91,14 @@ public class MixedSlabBlock extends SlabBlockDoTB implements IBlockCustomItem {
 	public Item getCustomItemBlock() {
 		return new BlockItem(this, new Item.Properties().tab(DOTB_TAB)){
 			@Override
-			public ActionResultType place(BlockItemUseContext context) {
+			public InteractionResult place(BlockPlaceContext context) {
 				Direction facing = context.getClickedFace();
 				if((context.getPlayer() != null && context.getPlayer().isCrouching()) || !facing.getAxis().isVertical())
 					return super.place(context);
 
-				PlayerEntity player = context.getPlayer();
+				Player player = context.getPlayer();
 				ItemStack itemStack = context.getItemInHand();
-				World worldIn = context.getLevel();
+				Level worldIn = context.getLevel();
 				BlockPos pos = context.getClickedPos();
 				if(!context.replacingClickedOnBlock()) pos = pos.relative(facing.getOpposite());
 				if(player != null){
@@ -116,13 +116,13 @@ public class MixedSlabBlock extends SlabBlockDoTB implements IBlockCustomItem {
 									continue;
 								if(worldIn.setBlock(pos, madeState, 11)){
 									this.getBlock().setPlacedBy(worldIn, pos, state, player, itemStack);
-									if (player instanceof ServerPlayerEntity) {
-										CriteriaTriggers.PLACED_BLOCK.trigger((ServerPlayerEntity)player, pos, itemStack);
+									if (player instanceof ServerPlayer) {
+										CriteriaTriggers.PLACED_BLOCK.trigger((ServerPlayer)player, pos, itemStack);
 									}
 									SoundType soundtype = recipe.getMixedBlock().getSoundType(state, worldIn, pos, player);
-									worldIn.playSound(player, pos, soundtype.getPlaceSound(), SoundCategory.BLOCKS, (soundtype.getVolume() + 1.0F) / 2.0F, soundtype.getPitch() * 0.8F);
+									worldIn.playSound(player, pos, soundtype.getPlaceSound(), SoundSource.BLOCKS, (soundtype.getVolume() + 1.0F) / 2.0F, soundtype.getPitch() * 0.8F);
 									itemStack.shrink(1);
-									return ActionResultType.SUCCESS;
+									return InteractionResult.SUCCESS;
 								}
 							}
 

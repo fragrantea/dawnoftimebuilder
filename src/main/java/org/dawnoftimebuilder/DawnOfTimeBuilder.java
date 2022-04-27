@@ -1,7 +1,7 @@
 package org.dawnoftimebuilder;
 
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -17,7 +17,7 @@ import static org.dawnoftimebuilder.registry.DoTBBlocksRegistry.COMMELINA;
 public class DawnOfTimeBuilder {
 
     public static final String MOD_ID = "dawnoftimebuilder";
-    public static final ItemGroup DOTB_TAB = new ItemGroup(ItemGroup.getGroupCountSafe(), MOD_ID) {
+    public static final CreativeModeTab DOTB_TAB = new CreativeModeTab(CreativeModeTab.getGroupCountSafe(), MOD_ID) {
         @Override
         public ItemStack makeIcon() {
             return new ItemStack(COMMELINA.get());

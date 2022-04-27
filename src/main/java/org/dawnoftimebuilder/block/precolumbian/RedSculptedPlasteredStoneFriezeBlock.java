@@ -1,12 +1,12 @@
 package org.dawnoftimebuilder.block.precolumbian;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.dawnoftimebuilder.block.templates.PlateBlock;
 import org.dawnoftimebuilder.util.DoTBBlockUtils;
 
@@ -28,11 +28,11 @@ public class RedSculptedPlasteredStoneFriezeBlock extends PlateBlock {
 		VoxelShape vs_qtr_n = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 4.0D, 8.0D);
 		VoxelShape vs_spike_n = Block.box(4.0D, 4.0D, 4.0D, 12.0D, 13.0D, 7.0D);
 		return new VoxelShape[]{
-				VoxelShapes.or(
+				Shapes.or(
 						Block.box(0.0D, 0.0D, 0.0D, 8.0D, 4.0D, 8.0D),
 						Block.box(4.0D, 2.0D, 4.0D, 12.0D, 13.0D, 12.0D)),
-				VoxelShapes.or(vs_qtr_n, vs_spike_n),
-				VoxelShapes.or(
+				Shapes.or(vs_qtr_n, vs_spike_n),
+				Shapes.or(
 						vs_qtr_n,
 						Block.box(0.0D, 0.0D, 8.0D, 8.0D, 4.0D, 16.0D),
 						vs_spike_n,
@@ -42,7 +42,7 @@ public class RedSculptedPlasteredStoneFriezeBlock extends PlateBlock {
 	}
 
 	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
 		int index = (state.getValue(FACING).get2DDataValue() + 2) % 4;
 		index *= 3;
 		switch (state.getValue(SHAPE)) {

@@ -1,31 +1,33 @@
 package org.dawnoftimebuilder.block.templates;
 
 import net.minecraft.block.*;
-import net.minecraft.block.material.Material;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.fluid.FluidState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.item.Food;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
 import net.minecraft.util.IItemProvider;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.PlantType;
 import net.minecraftforge.common.Tags;
@@ -61,13 +63,13 @@ public class SoilCropsBlock extends CropsBlock implements IBlockCustomItem, IBlo
 	}
 
 	@Override
-	protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		super.createBlockStateDefinition(builder);
 		builder.add(PERSISTENT);
 	}
 
 	@Override
-	public void randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {
+	public void randomTick(BlockState state, ServerLevel worldIn, BlockPos pos, Random random) {
 		if(state.getValue(PERSISTENT)) return;
 		if (!worldIn.isAreaLoaded(pos, 1)) return; // Forge: prevent loading unloaded chunks when checking neighbor's light
 		if (worldIn.getRawBrightness(pos, 0) >= 9) {
@@ -83,12 +85,12 @@ public class SoilCropsBlock extends CropsBlock implements IBlockCustomItem, IBlo
 	}
 
 	@Override
-	public boolean canSurvive(BlockState state, IWorldReader world, BlockPos pos) {
+	public boolean canSurvive(BlockState state, BlockGetter world, BlockPos pos) {
 		return this.mayGenerateOn(world, pos.below(), this.getPlantType(world, pos)) && super.canSurvive(state, world, pos);
 	}
 
 	@Override
-	protected boolean mayPlaceOn(BlockState state, IBlockReader world, BlockPos pos) {
+	protected boolean mayPlaceOn(BlockState state, BlockGetter world, BlockPos pos) {
 		return this.mayGenerateOn(world, pos, this.getPlantType(world, pos));
 	}
 
@@ -99,7 +101,7 @@ public class SoilCropsBlock extends CropsBlock implements IBlockCustomItem, IBlo
 	 * @param plantType of the plant, which is used to get the whitelisted blocks.
 	 * @return true if the plant can be generated on this block, false otherwise.
 	 */
-	public boolean mayGenerateOn(IBlockReader worldIn, BlockPos pos, PlantType plantType){
+	public boolean mayGenerateOn(BlockGetter worldIn, BlockPos pos, PlantType plantType){
 		BlockState stateOn = worldIn.getBlockState(pos);
 		Block blockOn = stateOn.getBlock();
 
@@ -151,19 +153,19 @@ public class SoilCropsBlock extends CropsBlock implements IBlockCustomItem, IBlo
 	}
 
 	@Override
-	public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
 		if(state.getValue(PERSISTENT)){
 			if(player.isCreative()){
 				int age = this.getAge(state);
 				if(player.isCrouching()){
 					if(age > 0){
 						this.setPlantWithAge(state, worldIn, pos, age - 1);
-						return ActionResultType.SUCCESS;
+						return InteractionResult.SUCCESS;
 					}
 				}else{
 					if(age < this.getMaxAge()) {
 						this.setPlantWithAge(state, worldIn, pos, age + 1);
-						return ActionResultType.SUCCESS;
+						return InteractionResult.SUCCESS;
 					}
 				}
 			}
@@ -174,18 +176,18 @@ public class SoilCropsBlock extends CropsBlock implements IBlockCustomItem, IBlo
 					worldIn.addAlwaysVisibleParticle(ParticleTypes.SMOKE, (double)pos.getX() + rand.nextDouble(), (double)pos.getY() + 0.5D + rand.nextDouble() / 2, (double)pos.getZ() + rand.nextDouble(), 0.0D, 0.07D, 0.0D);
 				}
 				worldIn.setBlock(pos, state.setValue(PERSISTENT, true), 10);
-				return ActionResultType.SUCCESS;
+				return InteractionResult.SUCCESS;
 			}
 		}
 		return super.use(state, worldIn, pos, player, handIn, hit);
 	}
 
-	public void setPlantWithAge(BlockState currentState, IWorld worldIn, BlockPos pos, int newAge){
+	public void setPlantWithAge(BlockState currentState, Level worldIn, BlockPos pos, int newAge){
 		worldIn.setBlock(pos, currentState.setValue(this.getAgeProperty(), newAge), 10);
 	}
 
 	@Override
-	public PlantType getPlantType(IBlockReader world, BlockPos pos) {
+	public PlantType getPlantType(BlockGetter world, BlockPos pos) {
 		return this.plantType;
 	}
 
@@ -206,13 +208,13 @@ public class SoilCropsBlock extends CropsBlock implements IBlockCustomItem, IBlo
 	}
 
 	@Override
-	public void appendHoverText(ItemStack stack, @Nullable IBlockReader worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+	public void appendHoverText(ItemStack stack, @Nullable BlockGetter worldIn, List<TextComponent> tooltip, TooltipFlag flagIn) {
 		super.appendHoverText(stack, worldIn, tooltip, flagIn);
 		DoTBBlockUtils.addTooltip(tooltip, TOOLTIP_CROP);
 	}
 
 	@Override
-	public void generateOnPos(IWorld world, BlockPos pos, BlockState state, Random random) {
+	public void generateOnPos(Level world, BlockPos pos, BlockState state, Random random) {
 		this.setPlantWithAge(state, world, pos, random.nextInt(this.getMaxAge() + 1));
 	}
 }

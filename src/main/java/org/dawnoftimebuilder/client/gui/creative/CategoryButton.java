@@ -1,11 +1,11 @@
 package org.dawnoftimebuilder.client.gui.creative;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -20,7 +20,7 @@ public class CategoryButton extends Button {
     private final int index;
 
     public CategoryButton(int x, int y, int index, IPressable pressable){
-        super(x, y, 32, 28, StringTextComponent.EMPTY, pressable);
+        super(x, y, 32, 28, TextComponent.EMPTY, pressable);
         this.selected = false;
         this.index = index;
     }
@@ -38,7 +38,7 @@ public class CategoryButton extends Button {
     }
 
     @Override
-    public void renderButton(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderButton(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         if(this.active){
             Minecraft mc = Minecraft.getInstance();
             mc.getTextureManager().bind(CREATIVE_ICONS);

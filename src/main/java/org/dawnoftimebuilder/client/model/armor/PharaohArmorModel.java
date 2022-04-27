@@ -1,11 +1,10 @@
 package org.dawnoftimebuilder.client.model.armor;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -46,7 +45,7 @@ public class PharaohArmorModel<T extends LivingEntity> extends CustomArmorModel<
 	private ModelRenderer footRight;
 	private ModelRenderer footLeft;
 
-	public PharaohArmorModel(EquipmentSlotType slot, boolean isSteve) {
+	public PharaohArmorModel(EquipmentSlot slot, boolean isSteve) {
 		super(slot, 64, 64);
 
 		switch (slot) {
@@ -208,7 +207,7 @@ public class PharaohArmorModel<T extends LivingEntity> extends CustomArmorModel<
 	}
 
 	@Override
-	public void renderToBuffer(MatrixStack matrixStack, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha){
+	public void renderToBuffer(PoseStack matrixStack, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha){
 		this.setAllVisible(false);
 
 		switch (this.slot) {

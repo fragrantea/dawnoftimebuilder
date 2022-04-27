@@ -1,9 +1,9 @@
 package org.dawnoftimebuilder.block;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.ISeedReader;
-import net.minecraft.world.IWorld;
 
 import java.util.Random;
 
@@ -17,5 +17,5 @@ public interface IBlockGeneration {
      * @param state of the block (default state).
      * @param random instance.
      */
-    void generateOnPos(IWorld world, BlockPos pos, BlockState state, Random random);
+    void generateOnPos(Level world, BlockPos pos, BlockState state, Random random);
 }

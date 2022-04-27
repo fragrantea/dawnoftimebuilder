@@ -1,6 +1,6 @@
 package org.dawnoftimebuilder.block.templates;
 
-import net.minecraft.item.Item;
+import net.minecraft.world.item.Item;
 import org.dawnoftimebuilder.block.IBlockCustomItem;
 
 import javax.annotation.Nullable;

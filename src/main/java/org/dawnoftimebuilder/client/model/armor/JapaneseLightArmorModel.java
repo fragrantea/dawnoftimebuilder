@@ -1,10 +1,10 @@
 package org.dawnoftimebuilder.client.model.armor;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -34,7 +34,7 @@ public class JapaneseLightArmorModel<T extends LivingEntity> extends CustomArmor
 	private ModelRenderer legLeftLayer;
 	private ModelRenderer legRightLayer;
 
-	public JapaneseLightArmorModel(EquipmentSlotType slot, boolean isSteve) {
+	public JapaneseLightArmorModel(EquipmentSlot slot, boolean isSteve) {
 		super(slot, 64, 32);
 
 		switch (slot) {
@@ -155,7 +155,7 @@ public class JapaneseLightArmorModel<T extends LivingEntity> extends CustomArmor
 	}
 
 	@Override
-	public void renderToBuffer(MatrixStack matrixStack, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha){
+	public void renderToBuffer(PoseStack matrixStack, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha){
 		this.setAllVisible(false);
 
 		switch (this.slot) {
@@ -185,7 +185,7 @@ public class JapaneseLightArmorModel<T extends LivingEntity> extends CustomArmor
 	public void setupArmorAnim(T entityIn, float ageInTicks) {
 		super.setupArmorAnim(entityIn, ageInTicks);
 
-		if (this.slot == EquipmentSlotType.HEAD) {
+		if (this.slot == EquipmentSlot.HEAD) {
 			float f = 0.3F * sinPI(ageInTicks / 60.0F + 1.0F) + Math.abs(this.rightLeg.xRot);
 			this.ribbonA.xRot = Math.max(0.35F + f * 0.15F - this.head.xRot, 0.2F);
 			this.ribbonA.zRot = -0.1F + f * 0.2F;

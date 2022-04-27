@@ -1,10 +1,10 @@
 package org.dawnoftimebuilder.client.model.entity;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
-import net.minecraft.client.renderer.entity.model.EntityModel;	
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.dawnoftimebuilder.entity.JapaneseDragonEntity;
@@ -423,7 +423,7 @@ public class JapaneseDragonModel extends EntityModel<JapaneseDragonEntity> {
 	}
 
 	@Override
-	public void renderToBuffer(MatrixStack matrixStack, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha){
+	public void renderToBuffer(PoseStack matrixStack, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha){
 		matrixStack.pushPose();
 		matrixStack.scale(this.dragonScale, this.dragonScale, this.dragonScale);
 		this.HeadCenter.render(matrixStack, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
@@ -493,7 +493,7 @@ public class JapaneseDragonModel extends EntityModel<JapaneseDragonEntity> {
 	}
 
 	private float sinPI(float f) {
-		return MathHelper.sin(f * (float)Math.PI);
+		return Mth.sin(f * (float)Math.PI);
 	}
 
 	private void setRotateAngle(ModelRenderer ModelRenderer, float x, float y, float z) {

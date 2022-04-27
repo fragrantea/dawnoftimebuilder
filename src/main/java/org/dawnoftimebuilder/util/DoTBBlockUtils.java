@@ -1,31 +1,30 @@
 package org.dawnoftimebuilder.util;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootContext;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.loot.LootParameterSets;
 import net.minecraft.loot.LootParameters;
-import net.minecraft.loot.LootTable;
+import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.util.Hand;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.Tags;
 
 import javax.annotation.Nullable;
@@ -40,7 +39,7 @@ public class DoTBBlockUtils {
 	public static final int HIGHEST_Y = 255;
 
 	//Tooltip translation text
-	public static final ITextComponent TOOLTIP_HOLD_SHIFT = new TranslationTextComponent("tooltip." + MOD_ID + ".hold_key").withStyle(TextFormatting.GRAY).append(new TranslationTextComponent("tooltip." + MOD_ID + ".shift").withStyle(TextFormatting.AQUA));
+	public static final TextComponent TOOLTIP_HOLD_SHIFT = new TranslationTextComponent("tooltip." + MOD_ID + ".hold_key").withStyle(ChatFormatting.GRAY).append(new TranslationTextComponent("tooltip." + MOD_ID + ".shift").withStyle(ChatFormatting.AQUA));
 	public static final String TOOLTIP_COLUMN = "column";
 	public static final String TOOLTIP_CLIMBING_PLANT = "climbing_plant";
 	public static final String TOOLTIP_BEAM = "beam";
@@ -60,7 +59,7 @@ public class DoTBBlockUtils {
 	 * @return A table filled with the previous VS and new ones rotated in each 3 horizontal directions.
 	 */
 	public static VoxelShape[] GenerateHorizontalShapes(VoxelShape[] shapes){
-		VoxelShape[] newShape = {VoxelShapes.empty()};
+		VoxelShape[] newShape = {Shapes.empty()};
 		VoxelShape[] newShapes = new VoxelShape[shapes.length * 4];
 		int i = 0;
 		for(VoxelShape shape : shapes){
@@ -70,10 +69,10 @@ public class DoTBBlockUtils {
 		for(int rotation = 1; rotation < 4; rotation++){
 			int j = 0;
 			for(VoxelShape shape : shapes){
-				shape.forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> newShape[0] = VoxelShapes.or(newShape[0], VoxelShapes.box(1-maxZ, minY, minX, 1-minZ, maxY, maxX)));
+				shape.forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> newShape[0] = Shapes.or(newShape[0], Shapes.box(1-maxZ, minY, minX, 1-minZ, maxY, maxX)));
 				shapes[j] = newShape[0];
 				newShapes[i] = newShape[0];
-				newShape[0] = VoxelShapes.empty();
+				newShape[0] = Shapes.empty();
 				i++;
 				j++;
 			}
@@ -88,13 +87,13 @@ public class DoTBBlockUtils {
 	 * @param name Used to define the name of the LootTable.
 	 * @return the List of ItemStack found in the corresponding LootTable.
 	 */
-	public static List<ItemStack> getLootList(ServerWorld serverWorld, BlockState stateIn, ItemStack itemStackHand, String name){
+	public static List<ItemStack> getLootList(ServerLevel serverWorld, BlockState stateIn, ItemStack itemStackHand, String name){
 		LootTable table = serverWorld.getServer().getLootTables().get(new ResourceLocation(MOD_ID + ":blocks/" + name));
 		LootContext.Builder builder = (new LootContext.Builder(serverWorld))
 				.withRandom(serverWorld.random)
 				.withParameter(LootParameters.BLOCK_STATE, stateIn)
 				.withParameter(LootParameters.TOOL, itemStackHand)
-				.withParameter(LootParameters.ORIGIN, new Vector3d(0, 0, 0));
+				.withParameter(LootParameters.ORIGIN, new Vec3(0, 0, 0));
 		LootContext lootcontext = builder.create(LootParameterSets.BLOCK);
 		return table.getRandomItems(lootcontext);
 	}
@@ -107,12 +106,12 @@ public class DoTBBlockUtils {
 	 * @param multiplier Multiply the quantity of item (round down) per ItemStack (use 1.0F to keep the same number).
 	 * @return True if some items are dropped, False otherwise.
 	 */
-	public static boolean dropLootFromList(IWorld worldIn, BlockPos pos, List<ItemStack> drops, float multiplier){
-		if(drops.isEmpty() || !(worldIn instanceof World)) return false;
+	public static boolean dropLootFromList(Level worldIn, BlockPos pos, List<ItemStack> drops, float multiplier){
+		if(drops.isEmpty() || !(worldIn instanceof Level)) return false;
 		for(ItemStack drop : drops){
 			int quantity = (int) Math.floor(drop.getCount() * multiplier);
 			for (int i = 0; i < quantity; i++){
-				Block.popResource((World) worldIn, pos, new ItemStack(drop.getItem(), 1));
+				Block.popResource((Level) worldIn, pos, new ItemStack(drop.getItem(), 1));
 			}
 		}
 		return true;
@@ -126,30 +125,30 @@ public class DoTBBlockUtils {
 	 * @param handIn Player's hand.
 	 * @return True if the block is now in fire. False otherwise.
 	 */
-	public static boolean useLighter(World worldIn, BlockPos pos, PlayerEntity player, Hand handIn){
+	public static boolean useLighter(Level worldIn, BlockPos pos, Player player, InteractionHand handIn){
 		ItemStack itemInHand = player.getItemInHand(handIn);
 		if (!itemInHand.isEmpty() && itemInHand.getItem().is(LIGHTERS)) {
-			worldIn.playSound(null, pos, SoundEvents.FLINTANDSTEEL_USE, SoundCategory.BLOCKS, 1.0F, 1.0F);
+			worldIn.playSound(null, pos, SoundEvents.FLINTANDSTEEL_USE, SoundSource.BLOCKS, 1.0F, 1.0F);
 			itemInHand.hurtAndBreak(1, player, (p) -> p.broadcastBreakEvent(handIn));
 			return true;
 		}
 		return false;
 	}
 
-	public static void addTooltip(List<ITextComponent> tooltip, String... tooltipNames){
+	public static void addTooltip(List<TextComponent> tooltip, String... tooltipNames){
 		addTooltip(tooltip, null, tooltipNames);
 	}
 	
-	public static void addTooltip(List<ITextComponent> tooltip, @Nullable Block block, String... tooltipNames){
+	public static void addTooltip(List<TextComponent> tooltip, @Nullable Block block, String... tooltipNames){
 		if(Screen.hasShiftDown()){
 			if(block != null){
 				ResourceLocation blockName = block.getRegistryName();
 				if(blockName != null){
-					tooltip.add(new TranslationTextComponent("tooltip." + MOD_ID + "." + blockName.getPath()).withStyle(TextFormatting.GRAY));
+					tooltip.add(new TranslationTextComponent("tooltip." + MOD_ID + "." + blockName.getPath()).withStyle(ChatFormatting.GRAY));
 				}
 			}
 			for(String tooltipName : tooltipNames){
-				tooltip.add(new TranslationTextComponent("tooltip." + MOD_ID + "." + tooltipName).withStyle(TextFormatting.GRAY));
+				tooltip.add(new TranslationTextComponent("tooltip." + MOD_ID + "." + tooltipName).withStyle(ChatFormatting.GRAY));
 			}
 		}else tooltip.add(TOOLTIP_HOLD_SHIFT);
 

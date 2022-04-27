@@ -1,14 +1,12 @@
 package org.dawnoftimebuilder.item.templates;
 
-import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
-import net.minecraft.client.renderer.entity.model.BipedModel;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ArmorItem;
-import net.minecraft.item.IArmorMaterial;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.dawnoftimebuilder.client.model.armor.CustomArmorModel;
@@ -24,7 +22,7 @@ public abstract class CustomArmorItem extends ArmorItem {
 	public CustomArmorModel<LivingEntity> model = null;
 	public CustomArmorModel<LivingEntity> slimModel = null;
 
-	public CustomArmorItem(String set, IArmorMaterial materialIn, EquipmentSlotType slot) {
+	public CustomArmorItem(String set, IArmorMaterial materialIn, EquipmentSlot slot) {
 		super(materialIn, slot, new Item.Properties().stacksTo(1).tab(DOTB_TAB));
 		this.set = set;
 	}
@@ -37,7 +35,7 @@ public abstract class CustomArmorItem extends ArmorItem {
 	@Nullable
 	@Override
 	@OnlyIn(Dist.CLIENT)
-	public <A extends BipedModel<?>> A getArmorModel(LivingEntity entityLiving, ItemStack itemStack, EquipmentSlotType armorSlot, A _default) {
+	public <A extends HumanoidModel<?>> A getArmorModel(LivingEntity entityLiving, ItemStack itemStack, EquipmentSlot armorSlot, A _default) {
 		if(!itemStack.isEmpty()) {
 			if(itemStack.getItem() instanceof ArmorItem) {
 
@@ -71,7 +69,7 @@ public abstract class CustomArmorItem extends ArmorItem {
 
 	@Nullable
 	@Override
-	public String getArmorTexture(ItemStack stack, Entity entity, EquipmentSlotType slot, String type) {
+	public String getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot, String type) {
 		if(entity instanceof AbstractClientPlayerEntity){
 			if("slim".equals(((AbstractClientPlayerEntity) entity).getModelName())){
 				return MOD_ID + ":textures/models/armor/" + this.set + "_slim.png";

@@ -1,22 +1,22 @@
 package org.dawnoftimebuilder.block.templates;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.EnumProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.util.Mirror;
-import net.minecraft.util.Rotation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.dawnoftimebuilder.util.DoTBBlockStateProperties;
 import org.dawnoftimebuilder.util.DoTBBlockStateProperties.SidedWindow;
 import org.dawnoftimebuilder.util.DoTBBlockUtils;
@@ -28,7 +28,7 @@ import static org.dawnoftimebuilder.util.DoTBBlockUtils.TOOLTIP_SIDED_WINDOW;
 
 public class SidedWindowBlock extends BlockDoTB {
 
-	public static final EnumProperty<DoTBBlockStateProperties.SidedWindow> SIDED_WINDOW = DoTBBlockStateProperties.SIDED_WINDOW;
+	public static final EnumProperty<SidedWindow> SIDED_WINDOW = DoTBBlockStateProperties.SIDED_WINDOW;
 	private static final BooleanProperty UP = BlockStateProperties.UP;
 	private static final BooleanProperty ATTACHED = BlockStateProperties.ATTACHED;
 	private static final VoxelShape NORTH_VS = Block.box(0.0D, 0.0D, 2.0D, 16.0D, 16.0D, 6.0D);
@@ -44,12 +44,12 @@ public class SidedWindowBlock extends BlockDoTB {
 	}
 
 	@Override
-	protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		builder.add(SIDED_WINDOW, UP, ATTACHED);
 	}
 
 	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader world, BlockPos pos, ISelectionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
 		switch(state.getValue(SIDED_WINDOW)){
 			default:
 			case NORTH:
@@ -68,15 +68,15 @@ public class SidedWindowBlock extends BlockDoTB {
 	}
 
 	@Override
-	public BlockState getStateForPlacement(BlockItemUseContext context) {
-		World worldIn = context.getLevel();
+	public BlockState getStateForPlacement(BlockPlaceContext context) {
+		Level worldIn = context.getLevel();
 		BlockPos pos = context.getClickedPos();
 		BlockState state = this.defaultBlockState().setValue(SIDED_WINDOW, SidedWindow.getSide(context.getHorizontalDirection(), context.getPlayer() != null && context.getPlayer().isCrouching()));
 		return state.setValue(UP, canConnectVertical(state, worldIn, pos)).setValue(ATTACHED, canConnectHorizontal(state, worldIn, pos));
 	}
 
 	@Override
-	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, net.minecraft.block.Block blockIn, BlockPos fromPos, boolean isMoving){
+	public void neighborChanged(BlockState state, Level worldIn, BlockPos pos, Block blockIn, BlockPos fromPos, boolean isMoving){
 		super.neighborChanged(state, worldIn, pos, blockIn, fromPos, isMoving);
 		boolean changeTOP = canConnectVertical(state, worldIn, pos);
 		boolean changeSIDE = canConnectHorizontal(state, worldIn, pos);
@@ -86,18 +86,18 @@ public class SidedWindowBlock extends BlockDoTB {
         if(changeTOP != state.getValue(UP) || changeSIDE != state.getValue(ATTACHED)) worldIn.setBlock(pos, newState, 10);
     }
 	
-    private boolean canConnectVertical(BlockState state, World worldIn, BlockPos pos) {
+    private boolean canConnectVertical(BlockState state, Level worldIn, BlockPos pos) {
     	if(isSameWindowAndSide(state, worldIn, pos.below())){
 			return !isSameWindowAndSide(state, worldIn, pos.above());
     	}
     	return false;
     }
     
-    private boolean canConnectHorizontal(BlockState state, World worldIn, BlockPos pos) {
+    private boolean canConnectHorizontal(BlockState state, Level worldIn, BlockPos pos) {
     	return isSameWindowAndSide(state, worldIn, pos.relative(state.getValue(SIDED_WINDOW).getOffset()));
     }
 
-    private boolean isSameWindowAndSide(BlockState state, World worldIn, BlockPos pos){
+    private boolean isSameWindowAndSide(BlockState state, Level worldIn, BlockPos pos){
 		BlockState otherState = worldIn.getBlockState(pos);
 		if(otherState.getBlock() == this){
 			return otherState.getValue(SIDED_WINDOW) == state.getValue(SIDED_WINDOW);
@@ -122,7 +122,7 @@ public class SidedWindowBlock extends BlockDoTB {
 	}
 
 	@Override
-	public void appendHoverText(ItemStack stack, @Nullable IBlockReader worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+	public void appendHoverText(ItemStack stack, @Nullable BlockGetter worldIn, List<TextComponent> tooltip, TooltipFlag flagIn) {
 		super.appendHoverText(stack, worldIn, tooltip, flagIn);
 		DoTBBlockUtils.addTooltip(tooltip, TOOLTIP_SIDED_WINDOW);
 	}

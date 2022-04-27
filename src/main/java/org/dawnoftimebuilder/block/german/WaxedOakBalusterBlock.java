@@ -1,12 +1,12 @@
 package org.dawnoftimebuilder.block.german;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.level.BlockGetter;
 import org.dawnoftimebuilder.block.templates.PlateBlock;
 import org.dawnoftimebuilder.util.DoTBBlockUtils;
 
@@ -19,7 +19,7 @@ public class WaxedOakBalusterBlock extends PlateBlock {
     }
 
     @Override
-    public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
         int index = (state.getValue(FACING).get2DDataValue() + 2) % 4;
         index *= 3;
         switch (state.getValue(SHAPE)) {
@@ -70,16 +70,16 @@ public class WaxedOakBalusterBlock extends PlateBlock {
         return new VoxelShape[]{
                 vs_nw_corner,
                 vs_north_flat,
-                VoxelShapes.or(vs_north_flat, vs_west_flat),
+                Shapes.or(vs_north_flat, vs_west_flat),
                 vs_ne_corner,
                 vs_east_flat,
-                VoxelShapes.or(vs_east_flat, vs_north_flat),
+                Shapes.or(vs_east_flat, vs_north_flat),
                 vs_se_corner,
                 vs_south_flat,
-                VoxelShapes.or(vs_south_flat, vs_east_flat),
+                Shapes.or(vs_south_flat, vs_east_flat),
                 vs_sw_corner,
                 vs_west_flat,
-                VoxelShapes.or(vs_west_flat, vs_south_flat),
+                Shapes.or(vs_west_flat, vs_south_flat),
         };
     }
 }

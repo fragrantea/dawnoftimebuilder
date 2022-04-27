@@ -1,14 +1,14 @@
 package org.dawnoftimebuilder.entity;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.IPacket;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.network.NetworkHooks;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraftforge.network.NetworkHooks;
 
 import java.util.List;
 
@@ -18,32 +18,32 @@ public class ChairEntity extends Entity {
 
     private BlockPos pos;
 
-    public ChairEntity(World world){
+    public ChairEntity(Level world){
         super(CHAIR_ENTITY.get(), world);
         this.noPhysics = true;
     }
 
-    private ChairEntity(World world, BlockPos pos, float pixelsXOffset, float pixelsYOffset, float pixelsZOffset) {
+    private ChairEntity(Level world, BlockPos pos, float pixelsXOffset, float pixelsYOffset, float pixelsZOffset) {
         this(world);
         this.pos = pos;
         //Strangely, the default position (with 0 vertical offset) is 3 pixels above the floor.
         this.setPos(pos.getX() + pixelsXOffset / 16.0D, pos.getY() + (pixelsYOffset - 3.0D) / 16.0D, pos.getZ() + pixelsZOffset / 16.0D);
     }
 
-    public static ActionResultType createEntity(World world, BlockPos pos, PlayerEntity player, float pixelsXOffset, float pixelsYOffset, float pixelsZOffset) {
+    public static InteractionResult createEntity(Level world, BlockPos pos, Player player, float pixelsXOffset, float pixelsYOffset, float pixelsZOffset) {
         if(!world.isClientSide()) {
-            List<ChairEntity> seats = world.getEntitiesOfClass(ChairEntity.class, new AxisAlignedBB(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1.0D, pos.getY() + 1.0D, pos.getZ() + 1.0D));
+            List<ChairEntity> seats = world.getEntitiesOfClass(ChairEntity.class, new AABB(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1.0D, pos.getY() + 1.0D, pos.getZ() + 1.0D));
             if(seats.isEmpty()) {
                 ChairEntity seat = new ChairEntity(world, pos, pixelsXOffset, pixelsYOffset, pixelsZOffset);
                 world.addFreshEntity(seat);
                 player.startRiding(seat, false);
-                return ActionResultType.SUCCESS;
+                return InteractionResult.SUCCESS;
             }
         }
-        return ActionResultType.FAIL;
+        return InteractionResult.FAIL;
     }
 
-    public static ActionResultType createEntity(World world, BlockPos pos, PlayerEntity player, float pixelsYOffset) {
+    public static InteractionResult createEntity(Level world, BlockPos pos, Player player, float pixelsYOffset) {
         return createEntity(world, pos, player, 8.0F, pixelsYOffset, 8.0F);
     }
 
@@ -67,17 +67,17 @@ public class ChairEntity extends Entity {
     }
 
     @Override
-    protected void readAdditionalSaveData(CompoundNBT p_70037_1_) {
+    protected void readAdditionalSaveData(CompoundTag p_70037_1_) {
 
     }
 
     @Override
-    protected void addAdditionalSaveData(CompoundNBT p_213281_1_) {
+    protected void addAdditionalSaveData(CompoundTag p_213281_1_) {
 
     }
 
     @Override
-    public IPacket<?> getAddEntityPacket() {
+    public Packet<?> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 

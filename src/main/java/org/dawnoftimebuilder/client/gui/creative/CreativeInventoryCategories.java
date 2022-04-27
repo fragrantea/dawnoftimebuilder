@@ -1,7 +1,7 @@
 package org.dawnoftimebuilder.client.gui.creative;
 
-import net.minecraft.item.Item;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.world.item.Item;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -9,8 +9,8 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static net.minecraft.block.Blocks.*;
-import static net.minecraft.item.Items.FLINT_AND_STEEL;
+import static net.minecraft.world.level.block.Blocks.*;
+import static net.minecraft.world.item.Items.FLINT_AND_STEEL;
 import static org.dawnoftimebuilder.DawnOfTimeBuilder.MOD_ID;
 import static org.dawnoftimebuilder.registry.DoTBBlocksRegistry.*;
 import static org.dawnoftimebuilder.registry.DoTBItemsRegistry.*;
@@ -443,7 +443,7 @@ public enum CreativeInventoryCategories {
 	);
 
 	private final String name;
-	private final ITextComponent translation;
+	private final TextComponent translation;
 	private final ArrayList<Item> items = new ArrayList<>();
 
 	CreativeInventoryCategories(String name, Item... items) {
@@ -456,7 +456,7 @@ public enum CreativeInventoryCategories {
 		return this.name;
 	}
 
-	public ITextComponent getTranslation() {
+	public TextComponent getTranslation() {
 		return this.translation;
 	}
 

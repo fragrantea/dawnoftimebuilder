@@ -1,26 +1,29 @@
 package org.dawnoftimebuilder.entity;
 
-import net.minecraft.block.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.control.MoveControl;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.entity.*;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.controller.MovementController;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.ai.goal.LookAtGoal;
-import net.minecraft.entity.ai.goal.LookRandomlyGoal;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.IServerWorld;
-import net.minecraft.world.World;
 import org.dawnoftimebuilder.DoTBConfig;
 
 import javax.annotation.Nullable;
@@ -29,19 +32,19 @@ import java.util.Random;
 
 import static org.dawnoftimebuilder.registry.DoTBEntitiesRegistry.JAPANESE_DRAGON_ENTITY;
 
-public class JapaneseDragonEntity extends CreatureEntity {
+public class JapaneseDragonEntity extends PathfinderMob {
 
-	private static final DataParameter<Float> SIZE = EntityDataManager.defineId(JapaneseDragonEntity.class, DataSerializers.FLOAT);
-	private static final DataParameter<Float> ANGLE = EntityDataManager.defineId(JapaneseDragonEntity.class, DataSerializers.FLOAT);
-	private static final DataParameter<Float> ANIM_DURATION = EntityDataManager.defineId(JapaneseDragonEntity.class, DataSerializers.FLOAT);
+	private static final EntityDataAccessor<Float> SIZE = SynchedEntityData.defineId(JapaneseDragonEntity.class, EntityDataSerializers.FLOAT);
+	private static final EntityDataAccessor<Float> ANGLE = SynchedEntityData.defineId(JapaneseDragonEntity.class, EntityDataSerializers.FLOAT);
+	private static final EntityDataAccessor<Float> ANIM_DURATION = SynchedEntityData.defineId(JapaneseDragonEntity.class, EntityDataSerializers.FLOAT);
 	private float previousTickAge = 0.0F;
 	private float animationLoop = 0.0F;
 
-	public JapaneseDragonEntity(World worldIn) {
+	public JapaneseDragonEntity(Level worldIn) {
 		super(JAPANESE_DRAGON_ENTITY.get(), worldIn);
 	}
 
-	public static AttributeModifierMap.MutableAttribute createAttributes() {
+	public static AttributeSupplier.MutableAttribute createAttributes() {
 		return MobEntity.createMobAttributes()
 				.add(Attributes.MAX_HEALTH, DoTBConfig.JAPANESE_DRAGON_HEALTH.get())
 				.add(Attributes.ATTACK_DAMAGE, DoTBConfig.JAPANESE_DRAGON_ATTACK.get());
@@ -50,7 +53,7 @@ public class JapaneseDragonEntity extends CreatureEntity {
 
 	@Nullable
 	@Override
-	public ILivingEntityData finalizeSpawn(IServerWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag) {
+	public ILivingEntityData finalizeSpawn(IServerWorld worldIn, DifficultyInstance difficultyIn, MobSpawnType reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundTag dataTag) {
 		float size = (float) this.random.nextGaussian();
 		if(size < 0) size = -1 / (size - 1);
 		else size = (float) (1.0D + Math.min(size * 0.5D, 15.0D));
@@ -177,7 +180,7 @@ public class JapaneseDragonEntity extends CreatureEntity {
 	}
 
 	@Override
-	public void readAdditionalSaveData(CompoundNBT compound) {
+	public void readAdditionalSaveData(CompoundTag compound) {
 		super.readAdditionalSaveData(compound);
 		float size = compound.getFloat("JapaneseDragonSize");
 		if(size > 0.0F){
@@ -188,7 +191,7 @@ public class JapaneseDragonEntity extends CreatureEntity {
 	}
 
 	@Override
-	public void addAdditionalSaveData(CompoundNBT compound) {
+	public void addAdditionalSaveData(CompoundTag compound) {
 		super.addAdditionalSaveData(compound);
 		compound.putFloat("JapaneseDragonSize", this.getDragonSize());
 	}
@@ -200,8 +203,8 @@ public class JapaneseDragonEntity extends CreatureEntity {
 		this.goalSelector.addGoal(3, new FlyDownGoal(this));
 		this.goalSelector.addGoal(4, new LongFlyGoal(this));
 		this.goalSelector.addGoal(5, new WanderFlyGoal(this));
-		this.goalSelector.addGoal(7, new LookAtGoal(this, PlayerEntity.class, 6.0F));
-		this.goalSelector.addGoal(8, new LookRandomlyGoal(this));
+		this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 6.0F));
+		this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 	}
 
 	public static class FlyUpGoal extends Goal {
@@ -242,12 +245,12 @@ public class JapaneseDragonEntity extends CreatureEntity {
 			if(this.dragon.getRandom().nextInt(100) != 0) return false;
 
 			BlockPos pos = new BlockPos(this.dragon.blockPosition().getX(), 90.0D, this.dragon.blockPosition().getZ());
-			World world = this.dragon.level;
-			if(world.getBlockState(pos).getCollisionShape(world, pos) == VoxelShapes.empty() && !world.getBlockState(pos).getMaterial().isLiquid()) return false;
+			Level world = this.dragon.level;
+			if(world.getBlockState(pos).getCollisionShape(world, pos) == Shapes.empty() && !world.getBlockState(pos).getMaterial().isLiquid()) return false;
 			int newY = world.getChunk(new BlockPos(this.dragon.blockPosition().getX(), this.dragon.blockPosition().getY(), this.dragon.blockPosition().getZ())).getHighestSectionPosition();
 			for(int y = newY + 16; y >= newY; y--){
 				pos = new BlockPos(this.dragon.blockPosition().getX(), y, this.dragon.blockPosition().getZ());
-				if(world.getBlockState(pos).getCollisionShape(world, pos) != VoxelShapes.empty() || world.getBlockState(pos).getMaterial().isLiquid()){
+				if(world.getBlockState(pos).getCollisionShape(world, pos) != Shapes.empty() || world.getBlockState(pos).getMaterial().isLiquid()){
 					break;
 				}
 			}
@@ -276,7 +279,7 @@ public class JapaneseDragonEntity extends CreatureEntity {
 			if(this.dragon.blockPosition().getY() > 100.0D) return false;
 			if(this.dragon.getRandom().nextInt(50) != 0) return false;
 
-			MovementController controller = this.dragon.getMoveControl();
+			MoveControl controller = this.dragon.getMoveControl();
 			if (!controller.hasWanted()) return true;
 			else{
 				double distanceX = controller.getWantedX() - this.dragon.blockPosition().getX();
@@ -293,12 +296,12 @@ public class JapaneseDragonEntity extends CreatureEntity {
 			double newX = this.dragon.blockPosition().getX() + (double)((random.nextFloat() * 2.0F - 1.0F) * 16.0F);
 			double newZ = this.dragon.blockPosition().getZ() + (double)((random.nextFloat() * 2.0F - 1.0F) * 16.0F);
 
-			World world = this.dragon.level;
+			Level world = this.dragon.level;
 			BlockPos pos;
 			this.dragon.setAnimDuration(10.0F);
 			for(double newY = this.dragon.blockPosition().getY() - 16.0D; newY <= this.dragon.blockPosition().getY() + 16.0D; newY++){
 				pos = new BlockPos(newX, newY, newZ);
-				if(world.getBlockState(pos).getCollisionShape(world, pos) == VoxelShapes.empty() && !world.getBlockState(pos).getMaterial().isLiquid()){
+				if(world.getBlockState(pos).getCollisionShape(world, pos) == Shapes.empty() && !world.getBlockState(pos).getMaterial().isLiquid()){
 					this.dragon.getMoveControl().setWantedPosition(newX, newY + this.dragon.getDragonSize(), newZ, this.dragon.getDragonSpeed());
 					return;
 				}

@@ -1,27 +1,24 @@
 package org.dawnoftimebuilder.block.templates;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.SoundType;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.EnumProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 
-import net.minecraft.block.material.Material;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.level.BlockGetter;
 import org.dawnoftimebuilder.util.DoTBBlockStateProperties;
 import org.dawnoftimebuilder.util.DoTBBlockUtils;
 
@@ -41,21 +38,21 @@ public abstract class ColumnConnectibleBlock extends WaterloggedBlock {
 	}
 
 	@Override
-	protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		super.createBlockStateDefinition(builder);
 		builder.add(VERTICAL_CONNECTION);
 	}
 
 	@Override
-	public abstract VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context);
+	public abstract VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context);
 
 	@Override
-	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) {
+	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, Level worldIn, BlockPos currentPos, BlockPos facingPos) {
 		stateIn = super.updateShape(stateIn, facing, facingState, worldIn, currentPos, facingPos);
 		return (facing.getAxis().isVertical()) ? stateIn.setValue(VERTICAL_CONNECTION, this.getColumnState(worldIn, currentPos, stateIn)) : stateIn;
 	}
 
-	public DoTBBlockStateProperties.VerticalConnection getColumnState(IWorld worldIn, BlockPos pos, BlockState stateIn){
+	public DoTBBlockStateProperties.VerticalConnection getColumnState(Level worldIn, BlockPos pos, BlockState stateIn){
 		if(isConnectible(worldIn, pos.above(), stateIn)){
 			return (isConnectible(worldIn, pos.below(), stateIn)) ? DoTBBlockStateProperties.VerticalConnection.BOTH : DoTBBlockStateProperties.VerticalConnection.ABOVE;
 		}else{
@@ -63,12 +60,12 @@ public abstract class ColumnConnectibleBlock extends WaterloggedBlock {
 		}
 	}
 
-	public boolean isConnectible(IWorld worldIn, BlockPos pos, BlockState stateIn){
+	public boolean isConnectible(Level worldIn, BlockPos pos, BlockState stateIn){
 		return worldIn.getBlockState(pos).getBlock() == this;
 	}
 
 	@Override
-	public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
 		ItemStack heldItemStack = player.getItemInHand(handIn);
 		if(player.isCrouching()) {
 			//We remove the highest ColumnBlock
@@ -82,7 +79,7 @@ public abstract class ColumnConnectibleBlock extends WaterloggedBlock {
 						Block.dropResources(state, worldIn, pos, null, player, heldItemStack);
 					}
 				}
-				return ActionResultType.SUCCESS;
+				return InteractionResult.SUCCESS;
 			}
 		}else{
 			if(!heldItemStack.isEmpty() && heldItemStack.getItem() == this.asItem()){
@@ -95,14 +92,14 @@ public abstract class ColumnConnectibleBlock extends WaterloggedBlock {
 							heldItemStack.shrink(1);
 						}
 					}
-					return ActionResultType.SUCCESS;
+					return InteractionResult.SUCCESS;
 				}
 			}
 		}
 		return super.use(state, worldIn, pos, player, handIn, hit);
 	}
 
-	private BlockPos getHighestColumnPos(World worldIn, BlockPos pos){
+	private BlockPos getHighestColumnPos(Level worldIn, BlockPos pos){
 		int yOffset;
 		for(yOffset = 0; yOffset + pos.getY() <= HIGHEST_Y; yOffset++){
 			if(worldIn.getBlockState(pos.above(yOffset)).getBlock() != this) break;
@@ -111,7 +108,7 @@ public abstract class ColumnConnectibleBlock extends WaterloggedBlock {
 	}
 
 	@Override
-	public void appendHoverText(ItemStack stack, @Nullable IBlockReader worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+	public void appendHoverText(ItemStack stack, @Nullable BlockGetter worldIn, List<TextComponent> tooltip, TooltipFlag flagIn) {
 		super.appendHoverText(stack, worldIn, tooltip, flagIn);
 		DoTBBlockUtils.addTooltip(tooltip, TOOLTIP_COLUMN);
 	}

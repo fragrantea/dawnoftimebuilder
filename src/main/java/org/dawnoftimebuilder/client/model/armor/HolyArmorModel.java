@@ -1,10 +1,10 @@
 package org.dawnoftimebuilder.client.model.armor;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -58,7 +58,7 @@ public class HolyArmorModel<T extends LivingEntity> extends CustomArmorModel<T> 
 	public ModelRenderer armorLegRight;
 	public ModelRenderer legRightWing;
 
-	public HolyArmorModel(EquipmentSlotType slot, boolean isSteve) {
+	public HolyArmorModel(EquipmentSlot slot, boolean isSteve) {
 		super(slot, 128, 128);
 
 		switch (slot) {
@@ -406,7 +406,7 @@ public class HolyArmorModel<T extends LivingEntity> extends CustomArmorModel<T> 
 	}
 
 	@Override
-	public void renderToBuffer(MatrixStack matrixStack, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha){
+	public void renderToBuffer(PoseStack matrixStack, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha){
 		super.renderToBuffer(matrixStack, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
 	}
 

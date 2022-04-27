@@ -1,31 +1,32 @@
 package org.dawnoftimebuilder.block.templates;
 
 import net.minecraft.block.*;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.EnumProperty;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.state.IntegerProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import org.dawnoftimebuilder.block.IBlockClimbingPlant;
 import org.dawnoftimebuilder.block.IBlockPillar;
 import org.dawnoftimebuilder.util.DoTBBlockStateProperties;
@@ -56,13 +57,13 @@ public class BeamBlock extends WaterloggedBlock implements IBlockPillar, IBlockC
 	}
 
 	@Override
-	protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		super.createBlockStateDefinition(builder);
 		builder.add(BOTTOM, AXIS_Y, AXIS_X, AXIS_Z, CLIMBING_PLANT, AGE, PERSISTENT);
 	}
 
 	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
 		return SHAPES[getShapeIndex(state)];
 	}
 
@@ -94,28 +95,28 @@ public class BeamBlock extends WaterloggedBlock implements IBlockPillar, IBlockC
 	 * 10 : Axis Y + X + Z + Bottom
 	 */
 	private static VoxelShape[] makeShapes() {
-		VoxelShape vs_axis_x = net.minecraft.block.Block.box(0.0D, 4.0D, 4.0D, 16.0D, 12.0D, 12.0D);
-		VoxelShape vs_axis_z = net.minecraft.block.Block.box(4.0D, 4.0D, 0.0D, 12.0D, 12.0D, 16.0D);
-		VoxelShape vs_axis_x_z = VoxelShapes.or(vs_axis_x, vs_axis_z);
-		VoxelShape vs_axis_y = net.minecraft.block.Block.box(3.0D, 0.0D, 3.0D, 13.0D, 16.0D, 13.0D);
-		VoxelShape vs_axis_y_bottom = VoxelShapes.or(vs_axis_y, net.minecraft.block.Block.box(2.0D, 0.0D, 2.0D, 14.0D, 4.0D, 14.0D));
+		VoxelShape vs_axis_x = Block.box(0.0D, 4.0D, 4.0D, 16.0D, 12.0D, 12.0D);
+		VoxelShape vs_axis_z = Block.box(4.0D, 4.0D, 0.0D, 12.0D, 12.0D, 16.0D);
+		VoxelShape vs_axis_x_z = Shapes.or(vs_axis_x, vs_axis_z);
+		VoxelShape vs_axis_y = Block.box(3.0D, 0.0D, 3.0D, 13.0D, 16.0D, 13.0D);
+		VoxelShape vs_axis_y_bottom = Shapes.or(vs_axis_y, Block.box(2.0D, 0.0D, 2.0D, 14.0D, 4.0D, 14.0D));
 		return new VoxelShape[]{
 				vs_axis_x,
 				vs_axis_z,
 				vs_axis_x_z,
 				vs_axis_y,
 				vs_axis_y_bottom,
-				VoxelShapes.or(vs_axis_y, vs_axis_x),
-				VoxelShapes.or(vs_axis_y_bottom, vs_axis_x),
-				VoxelShapes.or(vs_axis_y, vs_axis_z),
-				VoxelShapes.or(vs_axis_y_bottom, vs_axis_z),
-				VoxelShapes.or(vs_axis_y, vs_axis_x_z),
-				VoxelShapes.or(vs_axis_y_bottom, vs_axis_x_z)
+				Shapes.or(vs_axis_y, vs_axis_x),
+				Shapes.or(vs_axis_y_bottom, vs_axis_x),
+				Shapes.or(vs_axis_y, vs_axis_z),
+				Shapes.or(vs_axis_y_bottom, vs_axis_z),
+				Shapes.or(vs_axis_y, vs_axis_x_z),
+				Shapes.or(vs_axis_y_bottom, vs_axis_x_z)
 		};
 	}
 
 	@Override
-	public BlockState getStateForPlacement(BlockItemUseContext context) {
+	public BlockState getStateForPlacement(BlockPlaceContext context) {
 		BlockState state = context.getLevel().getBlockState(context.getClickedPos());
 		if (state.getBlock() != this)
 			state = super.getStateForPlacement(context);
@@ -133,12 +134,12 @@ public class BeamBlock extends WaterloggedBlock implements IBlockPillar, IBlockC
 		return this.getCurrentState(state, context.getLevel(), context.getClickedPos());
 	}
 
-	public BlockState getCurrentState(BlockState stateIn, IWorld worldIn, BlockPos pos){
+	public BlockState getCurrentState(BlockState stateIn, Level worldIn, BlockPos pos){
 		return stateIn.getValue(AXIS_Y) ? stateIn.setValue(BOTTOM, canNotConnectUnder(worldIn.getBlockState(pos.below()))) : stateIn;
 	}
 
 	@Override
-	public boolean canBeReplaced(BlockState state, BlockItemUseContext useContext) {
+	public boolean canBeReplaced(BlockState state, BlockPlaceContext useContext) {
 		ItemStack itemstack = useContext.getItemInHand();
 		if(useContext.getPlayer() != null && useContext.getPlayer().isCrouching()) return false;
 		if (itemstack.getItem() == this.asItem()) {
@@ -157,14 +158,14 @@ public class BeamBlock extends WaterloggedBlock implements IBlockPillar, IBlockC
 	}
 
 	@Override
-	public void spawnAfterBreak(BlockState state, ServerWorld worldIn, BlockPos pos, ItemStack stack) {
+	public void spawnAfterBreak(BlockState state, ServerLevel worldIn, BlockPos pos, ItemStack stack) {
 		super.spawnAfterBreak(state, worldIn, pos, stack);
 		//Be careful, climbing plants are not dropping from block's loot_table, but from their own loot_table
 		this.dropPlant(state, worldIn, pos, stack);
 	}
 
 	@Override
-	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) {
+	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, Level worldIn, BlockPos currentPos, BlockPos facingPos) {
 		stateIn = super.updateShape(stateIn, facing, facingState, worldIn, currentPos, facingPos);
 		stateIn = this.getCurrentState(stateIn, worldIn, currentPos);
 		if(!this.canHavePlant(stateIn) && !stateIn.getValue(CLIMBING_PLANT).hasNoPlant()){
@@ -185,12 +186,12 @@ public class BeamBlock extends WaterloggedBlock implements IBlockPillar, IBlockC
 	}
 
 	@Override
-	public void tick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {
+	public void tick(BlockState state, ServerLevel worldIn, BlockPos pos, Random random) {
 		this.tickPlant(state, worldIn, pos, random);
 	}
 
 	@Override
-	public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit){
+	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit){
 		if(!state.getValue(PERSISTENT)){
 			if(DoTBBlockUtils.useLighter(worldIn, pos, player, handIn)){
 				Random rand = new Random();
@@ -198,19 +199,19 @@ public class BeamBlock extends WaterloggedBlock implements IBlockPillar, IBlockC
 					worldIn.addAlwaysVisibleParticle(ParticleTypes.SMOKE, (double)pos.getX() + rand.nextDouble(), (double)pos.getY() + 0.5D + rand.nextDouble() / 2, (double)pos.getZ() + rand.nextDouble(), 0.0D, 0.07D, 0.0D);
 				}
 				worldIn.setBlock(pos, state.setValue(PERSISTENT, true), 10);
-				return ActionResultType.SUCCESS;
+				return InteractionResult.SUCCESS;
 			}
 		}
 		if(player.isCreative()){
-			if(this.tryPlacingPlant(state, worldIn, pos, player, handIn)) return ActionResultType.SUCCESS;
+			if(this.tryPlacingPlant(state, worldIn, pos, player, handIn)) return InteractionResult.SUCCESS;
 		}
-		if(this.harvestPlant(state, worldIn, pos, player, handIn) == ActionResultType.SUCCESS){
-			return ActionResultType.SUCCESS;
+		if(this.harvestPlant(state, worldIn, pos, player, handIn) == InteractionResult.SUCCESS){
+			return InteractionResult.SUCCESS;
 		}
 		if(player.isCrouching() && state.getValue(BOTTOM)){
 			worldIn.setBlock(pos, state.setValue(BOTTOM, false), 10);
 		}
-		return ActionResultType.PASS;
+		return InteractionResult.PASS;
 	}
 
 	@Override
@@ -225,12 +226,12 @@ public class BeamBlock extends WaterloggedBlock implements IBlockPillar, IBlockC
 	}
 
 	@Override
-	public boolean isLadder(BlockState state, IWorldReader world, BlockPos pos, LivingEntity entity) {
+	public boolean isLadder(BlockState state, BlockGetter world, BlockPos pos, LivingEntity entity) {
 		return !state.getValue(CLIMBING_PLANT).hasNoPlant();
 	}
 
 	@Override
-	public void appendHoverText(ItemStack stack, @Nullable IBlockReader worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+	public void appendHoverText(ItemStack stack, @Nullable BlockGetter worldIn, List<TextComponent> tooltip, TooltipFlag flagIn) {
 		super.appendHoverText(stack, worldIn, tooltip, flagIn);
 		DoTBBlockUtils.addTooltip(tooltip, TOOLTIP_BEAM, TOOLTIP_CLIMBING_PLANT);
 	}

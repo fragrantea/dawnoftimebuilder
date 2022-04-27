@@ -1,25 +1,28 @@
 package org.dawnoftimebuilder.block.templates;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.block.material.PushReaction;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.fluid.Fluids;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.state.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.state.DirectionProperty;
-import net.minecraft.state.EnumProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.state.properties.DoorHingeSide;
-import net.minecraft.util.*;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import org.dawnoftimebuilder.util.DoTBBlockStateProperties;
 import org.dawnoftimebuilder.util.DoTBBlockUtils;
 
@@ -37,13 +40,13 @@ public class SmallShuttersBlock extends WaterloggedBlock {
     }
 
     @Override
-    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
         builder.add(FACING, HINGE, OPEN_POSITION, POWERED);
     }
 
     @Override
-    public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+    public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
         int index = 0;
         int horizontalIndex = 0;
         boolean hinge = (state.getValue(HINGE) == DoorHingeSide.RIGHT);
@@ -79,7 +82,7 @@ public class SmallShuttersBlock extends WaterloggedBlock {
     }
 
     @Override
-    public boolean propagatesSkylightDown(BlockState state, IBlockReader reader, BlockPos pos) {
+    public boolean propagatesSkylightDown(BlockState state, BlockGetter reader, BlockPos pos) {
         return true;
     }
 
@@ -89,8 +92,8 @@ public class SmallShuttersBlock extends WaterloggedBlock {
     }
 
     @Override
-    public BlockState getStateForPlacement(BlockItemUseContext context) {
-        World world = context.getLevel();
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        Level world = context.getLevel();
         Direction direction = context.getHorizontalDirection();
         BlockPos pos = context.getClickedPos();
         int x = direction.getStepX();
@@ -104,7 +107,7 @@ public class SmallShuttersBlock extends WaterloggedBlock {
     }
 
     @Override
-    public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) {
+    public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, Level worldIn, BlockPos currentPos, BlockPos facingPos) {
         Direction direction = stateIn.getValue(FACING);
         Direction hingeDirection = (stateIn.getValue(HINGE) == DoorHingeSide.LEFT) ? direction.getCounterClockWise() : direction.getClockWise();
         if(facing == hingeDirection) {
@@ -115,7 +118,7 @@ public class SmallShuttersBlock extends WaterloggedBlock {
     }
 
     @Override
-    public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+    public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
         if(state.getValue(OPEN_POSITION).isOpen())
             state = state.setValue(OPEN_POSITION, DoTBBlockStateProperties.OpenPosition.CLOSED);
         else{
@@ -125,11 +128,11 @@ public class SmallShuttersBlock extends WaterloggedBlock {
         worldIn.setBlock(pos, state, 10);
         worldIn.levelEvent(player, state.getValue(OPEN_POSITION).isOpen() ? this.getOpenSound() : this.getCloseSound(), pos, 0);
         if (state.getValue(WATERLOGGED)) worldIn.getLiquidTicks().scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(worldIn));
-        return ActionResultType.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 
     @Override
-    public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos, boolean isMoving) {
+    public void neighborChanged(BlockState state, Level worldIn, BlockPos pos, Block blockIn, BlockPos fromPos, boolean isMoving) {
         boolean isPowered = worldIn.hasNeighborSignal(pos);
         if(blockIn != this && isPowered != state.getValue(POWERED)) {
             if (isPowered != state.getValue(OPEN_POSITION).isOpen()) {
@@ -144,11 +147,11 @@ public class SmallShuttersBlock extends WaterloggedBlock {
         }
     }
 
-    protected DoTBBlockStateProperties.OpenPosition getOpenState(BlockState stateIn, IWorld worldIn, BlockPos pos){
+    protected DoTBBlockStateProperties.OpenPosition getOpenState(BlockState stateIn, Level worldIn, BlockPos pos){
         return worldIn.getBlockState(pos).getCollisionShape(worldIn, pos).isEmpty() ? DoTBBlockStateProperties.OpenPosition.FULL : DoTBBlockStateProperties.OpenPosition.HALF;
     }
 
-    private void playSound(World worldIn, BlockPos pos, boolean isOpening) {
+    private void playSound(Level worldIn, BlockPos pos, boolean isOpening) {
         worldIn.levelEvent(null, isOpening ? this.getOpenSound() : this.getCloseSound(), pos, 0);
     }
 

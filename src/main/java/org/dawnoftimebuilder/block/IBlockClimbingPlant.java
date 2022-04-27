@@ -1,17 +1,16 @@
 package org.dawnoftimebuilder.block;
 
-import net.minecraft.block.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.block.IWaterLoggable;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.ForgeHooks;
 import org.dawnoftimebuilder.util.DoTBBlockStateProperties;
 import org.dawnoftimebuilder.util.DoTBBlockUtils;
@@ -20,8 +19,8 @@ import org.dawnoftimebuilder.DoTBConfig;
 import java.util.List;
 import java.util.Random;
 
-import static net.minecraft.state.properties.BlockStateProperties.PERSISTENT;
-import static net.minecraft.state.properties.BlockStateProperties.WATERLOGGED;
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.PERSISTENT;
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED;
 import static org.dawnoftimebuilder.util.DoTBBlockStateProperties.AGE_0_6;
 import static org.dawnoftimebuilder.util.DoTBBlockStateProperties.CLIMBING_PLANT;
 
@@ -35,7 +34,7 @@ public interface IBlockClimbingPlant {
 	 * @param pos Position of the Block.
 	 * @param random Used to determine if the Block must grow.
 	 */
-	default void tickPlant(BlockState stateIn, World worldIn, BlockPos pos, Random random){
+	default void tickPlant(BlockState stateIn, Level worldIn, BlockPos pos, Random random){
 		if (!worldIn.isClientSide()) {
 			if (stateIn.getValue(CLIMBING_PLANT).hasNoPlant() || stateIn.getValue(PERSISTENT)) return;
 			if (!worldIn.isAreaLoaded(pos, 2)) return; // Forge: prevent loading unloaded chunks when checking neighbor's light
@@ -84,7 +83,7 @@ public interface IBlockClimbingPlant {
 	 * @param handIn Active hand.
 	 * @return True if a Climbing Plant was successfully put on the Block.
 	 */
-	default boolean tryPlacingPlant(BlockState stateIn, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn){
+	default boolean tryPlacingPlant(BlockState stateIn, Level worldIn, BlockPos pos, Player player, InteractionHand handIn){
 		if(player.isCrouching()) return false;
 		ItemStack heldItemStack = player.getItemInHand(handIn);
 		if(this.canHavePlant(stateIn) && stateIn.getValue(CLIMBING_PLANT).hasNoPlant()){
@@ -112,7 +111,7 @@ public interface IBlockClimbingPlant {
 	 * @param handIn Active hand.
 	 * @return True if the Climbing Plant was modified.
 	 */
-	default ActionResultType harvestPlant(BlockState stateIn, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn){
+	default InteractionResult harvestPlant(BlockState stateIn, Level worldIn, BlockPos pos, Player player, InteractionHand handIn){
 		if(player.isCreative() && stateIn.getValue(PERSISTENT) && !stateIn.getValue(CLIMBING_PLANT).hasNoPlant()){
 			if(player.isCrouching()){
 				if(stateIn.getValue(AGE_0_6) > 0){
@@ -120,27 +119,27 @@ public interface IBlockClimbingPlant {
 				}else{
 					worldIn.setBlock(pos, stateIn.setValue(CLIMBING_PLANT, DoTBBlockStateProperties.ClimbingPlant.NONE).setValue(AGE_0_6, 0), 10);
 				}
-				return ActionResultType.SUCCESS;
+				return InteractionResult.SUCCESS;
 			}else{
 				if(stateIn.getValue(AGE_0_6) < stateIn.getValue(CLIMBING_PLANT).maxAge()){
 					worldIn.setBlock(pos, stateIn.setValue(AGE_0_6, stateIn.getValue(AGE_0_6) + 1), 10);
-					return ActionResultType.SUCCESS;
+					return InteractionResult.SUCCESS;
 				}
-				return ActionResultType.PASS;
+				return InteractionResult.PASS;
 			}
 		}else{
 			if(stateIn.getValue(AGE_0_6) > 2){
 				if(this.dropPlant(stateIn, worldIn, pos, player.getItemInHand(handIn))){
 					stateIn = stateIn.setValue(AGE_0_6, 2);
 					worldIn.setBlock(pos, stateIn, 10);
-					worldIn.playSound(null, pos, SoundEvents.GRASS_BREAK, SoundCategory.BLOCKS, 1.0F, 1.0F);
-					return ActionResultType.SUCCESS;
+					worldIn.playSound(null, pos, SoundEvents.GRASS_BREAK, SoundSource.BLOCKS, 1.0F, 1.0F);
+					return InteractionResult.SUCCESS;
 				}
 			}
 			if(player.isCrouching()){
 				return tryRemovingPlant(stateIn, worldIn, pos, player.getItemInHand(handIn));
 			}
-			return ActionResultType.PASS;
+			return InteractionResult.PASS;
 		}
 	}
 
@@ -152,13 +151,13 @@ public interface IBlockClimbingPlant {
 	 * @param heldItemStack Item in active hand to apply tool conditions in the LootTable.
 	 * @return True if a Climbing Plant was removed.
 	 */
-	default ActionResultType tryRemovingPlant(BlockState stateIn, World worldIn, BlockPos pos, ItemStack heldItemStack){
+	default InteractionResult tryRemovingPlant(BlockState stateIn, Level worldIn, BlockPos pos, ItemStack heldItemStack){
 		if(!stateIn.getValue(CLIMBING_PLANT).hasNoPlant()){
 			stateIn = this.removePlant(stateIn, worldIn, pos, heldItemStack);
 			worldIn.setBlock(pos, stateIn, 10);
-			return ActionResultType.SUCCESS;
+			return InteractionResult.SUCCESS;
 		}
-		return ActionResultType.PASS;
+		return InteractionResult.PASS;
 	}
 
 	/**
@@ -169,9 +168,9 @@ public interface IBlockClimbingPlant {
 	 * @param heldItemStack Item in active hand to apply tool conditions in the LootTable.
 	 * @return The State in input with no Climbing Plant, and AGE back to 0.
 	 */
-	default BlockState removePlant(BlockState stateIn, IWorld worldIn, BlockPos pos, ItemStack heldItemStack){
+	default BlockState removePlant(BlockState stateIn, Level worldIn, BlockPos pos, ItemStack heldItemStack){
 		this.dropPlant(stateIn, worldIn, pos, heldItemStack);
-		worldIn.playSound(null, pos, SoundEvents.GRASS_BREAK, SoundCategory.BLOCKS, 1.0F, 1.0F);
+		worldIn.playSound(null, pos, SoundEvents.GRASS_BREAK, SoundSource.BLOCKS, 1.0F, 1.0F);
 		stateIn = stateIn.setValue(CLIMBING_PLANT, DoTBBlockStateProperties.ClimbingPlant.NONE).setValue(AGE_0_6, 0);
 		return stateIn;
 	}
@@ -185,11 +184,11 @@ public interface IBlockClimbingPlant {
 	 * @param heldItemStack Item in active hand to apply tool conditions.
 	 * @return True if some loot is dropped. False if there were no loot_table found or item dropped.
 	 */
-	default boolean dropPlant(BlockState stateIn, IWorld worldIn, BlockPos pos, ItemStack heldItemStack){
+	default boolean dropPlant(BlockState stateIn, Level worldIn, BlockPos pos, ItemStack heldItemStack){
 		if(worldIn.isClientSide()) return false;
 		DoTBBlockStateProperties.ClimbingPlant plant = stateIn.getValue(CLIMBING_PLANT);
 		if(plant.hasNoPlant()) return false;
-		List<ItemStack> drops = DoTBBlockUtils.getLootList((ServerWorld)worldIn, stateIn, heldItemStack, plant.getSerializedName() + "_" + stateIn.getValue(AGE_0_6));
+		List<ItemStack> drops = DoTBBlockUtils.getLootList((ServerLevel)worldIn, stateIn, heldItemStack, plant.getSerializedName() + "_" + stateIn.getValue(AGE_0_6));
 		return DoTBBlockUtils.dropLootFromList(worldIn, pos, drops, 1.0F);
 	}
 

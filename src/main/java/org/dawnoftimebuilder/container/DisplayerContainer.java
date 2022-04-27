@@ -1,16 +1,16 @@
 package org.dawnoftimebuilder.container;
 
-import net.minecraft.block.Block;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.Item;
 import net.minecraft.util.IWorldPosCallable;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.SlotItemHandler;
 import org.dawnoftimebuilder.block.IBlockSpecialDisplay;
@@ -23,7 +23,7 @@ public class DisplayerContainer extends Container {
 
 	private final DisplayerTileEntity tileEntity;
 
-	public DisplayerContainer(int windowId, PlayerInventory playerInventory, World world, BlockPos pos) {
+	public DisplayerContainer(int windowId, Inventory playerInventory, Level world, BlockPos pos) {
 		super(DISPLAYER_CONTAINER.get(), windowId);
 		this.tileEntity = (world.getBlockEntity(pos) instanceof DisplayerTileEntity) ? (DisplayerTileEntity) world.getBlockEntity(pos) : null;
 		if(this.tileEntity != null){
@@ -48,7 +48,7 @@ public class DisplayerContainer extends Container {
 	}
 
 	@Override
-	public boolean stillValid(PlayerEntity playerIn) {
+	public boolean stillValid(Player playerIn) {
 		if(this.tileEntity.getLevel() == null) return false;
 		return stillValid(IWorldPosCallable.create(this.tileEntity.getLevel(), this.tileEntity.getBlockPos()), playerIn, this.tileEntity.getBlockState().getBlock());
 	}
@@ -81,7 +81,7 @@ public class DisplayerContainer extends Container {
 	}
 
 	@Override
-	public ItemStack quickMoveStack(PlayerEntity playerIn, int index) {
+	public ItemStack quickMoveStack(Player playerIn, int index) {
 		ItemStack itemStack = ItemStack.EMPTY;
 		Slot slot = this.slots.get(index);
 		if(slot != null && slot.hasItem()){

@@ -1,13 +1,13 @@
 package org.dawnoftimebuilder.util;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.item.IArmorMaterial;
-import net.minecraft.item.Items;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.LazyValue;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.SoundEvents;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.dawnoftimebuilder.DoTBConfig;
@@ -119,7 +119,7 @@ public class DoTBMaterials {
 		}
 
 		@Override
-		public int getDefenseForSlot(EquipmentSlotType slotIn) {
+		public int getDefenseForSlot(EquipmentSlot slotIn) {
 			return this.damageReductionAmountArray[slotIn.getIndex()];
 		}
 
@@ -139,7 +139,7 @@ public class DoTBMaterials {
 		}
 
 		@Override
-		public int getDurabilityForSlot(EquipmentSlotType slotIn) {
+		public int getDurabilityForSlot(EquipmentSlot slotIn) {
 			return MAX_DAMAGE_ARRAY[slotIn.getIndex()] * this.maxDamageFactor;
 		}
 

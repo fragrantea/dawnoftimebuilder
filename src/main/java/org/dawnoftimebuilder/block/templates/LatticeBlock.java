@@ -1,31 +1,30 @@
 package org.dawnoftimebuilder.block.templates;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.EnumProperty;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.state.IntegerProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.dawnoftimebuilder.block.IBlockClimbingPlant;
 import org.dawnoftimebuilder.util.DoTBBlockStateProperties;
 import org.dawnoftimebuilder.util.DoTBBlockUtils;
@@ -54,13 +53,13 @@ public class LatticeBlock extends WaterloggedBlock implements IBlockClimbingPlan
 	}
 
 	@Override
-	protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		super.createBlockStateDefinition(builder);
 		builder.add(NORTH, EAST, SOUTH, WEST, CLIMBING_PLANT, AGE, PERSISTENT);
 	}
 
 	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
 		int index = 0;
 		if(state.getValue(SOUTH)) index += 1;
 		if(state.getValue(WEST)) index += 2;
@@ -94,31 +93,31 @@ public class LatticeBlock extends WaterloggedBlock implements IBlockClimbingPlan
 		VoxelShape vs_west = Block.box(0.0D, 0.0D, 0.0D, 2.0D, 16.0D, 16.0D);
 		VoxelShape vs_north = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 16.0D, 2.0D);
 		VoxelShape vs_east = Block.box(14.0D, 0.0D, 0.0D, 16.0D, 16.0D, 16.0D);
-		VoxelShape vs_sw = VoxelShapes.or(vs_south, vs_west);
-		VoxelShape vs_wn = VoxelShapes.or(vs_west, vs_north);
-		VoxelShape vs_ne = VoxelShapes.or(vs_north, vs_east);
-		VoxelShape vs_se = VoxelShapes.or(vs_east, vs_south);
+		VoxelShape vs_sw = Shapes.or(vs_south, vs_west);
+		VoxelShape vs_wn = Shapes.or(vs_west, vs_north);
+		VoxelShape vs_ne = Shapes.or(vs_north, vs_east);
+		VoxelShape vs_se = Shapes.or(vs_east, vs_south);
 		return new VoxelShape[]{
-				VoxelShapes.or(vs_sw, vs_ne),
+				Shapes.or(vs_sw, vs_ne),
 				vs_south,
 				vs_west,
 				vs_sw,
 				vs_north,
-				VoxelShapes.or(vs_south, vs_north),
+				Shapes.or(vs_south, vs_north),
 				vs_wn,
-				VoxelShapes.or(vs_sw, vs_north),
+				Shapes.or(vs_sw, vs_north),
 				vs_east,
 				vs_se,
-				VoxelShapes.or(vs_west, vs_east),
-				VoxelShapes.or(vs_sw, vs_east),
+				Shapes.or(vs_west, vs_east),
+				Shapes.or(vs_sw, vs_east),
 				vs_ne,
-				VoxelShapes.or(vs_south, vs_ne),
-				VoxelShapes.or(vs_wn, vs_east),
+				Shapes.or(vs_south, vs_ne),
+				Shapes.or(vs_wn, vs_east),
 		};
 	}
 
 	@Override
-	public BlockState getStateForPlacement(BlockItemUseContext context) {
+	public BlockState getStateForPlacement(BlockPlaceContext context) {
 		BlockState state = context.getLevel().getBlockState(context.getClickedPos());
 		if (state.getBlock() != this)
 			state = super.getStateForPlacement(context);
@@ -136,7 +135,7 @@ public class LatticeBlock extends WaterloggedBlock implements IBlockClimbingPlan
 	}
 
 	@Override
-	public boolean canBeReplaced(BlockState state, BlockItemUseContext useContext) {
+	public boolean canBeReplaced(BlockState state, BlockPlaceContext useContext) {
 		ItemStack itemstack = useContext.getItemInHand();
 		if(useContext.getPlayer() != null && useContext.getPlayer().isCrouching()) return false;
 		if(itemstack.getItem() == this.asItem()) {
@@ -162,19 +161,19 @@ public class LatticeBlock extends WaterloggedBlock implements IBlockClimbingPlan
 	}
 
 	@Override
-	public void spawnAfterBreak(BlockState state, ServerWorld worldIn, BlockPos pos, ItemStack stack) {
+	public void spawnAfterBreak(BlockState state, ServerLevel worldIn, BlockPos pos, ItemStack stack) {
 		super.spawnAfterBreak(state, worldIn, pos, stack);
 		//Be careful, climbing plants are not dropping from block's loot_table, but from their own loot_table
 		this.dropPlant(state, worldIn, pos, stack);
 	}
 
 	@Override
-	public void tick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {
+	public void tick(BlockState state, ServerLevel worldIn, BlockPos pos, Random random) {
 		this.tickPlant(state, worldIn, pos, random);
 	}
 
 	@Override
-	public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
 		if(!state.getValue(PERSISTENT)){
 			if(DoTBBlockUtils.useLighter(worldIn, pos, player, handIn)){
 				Random rand = new Random();
@@ -182,26 +181,26 @@ public class LatticeBlock extends WaterloggedBlock implements IBlockClimbingPlan
 					worldIn.addParticle(ParticleTypes.SMOKE, (double)pos.getX() + rand.nextDouble(), (double)pos.getY() + 0.5D + rand.nextDouble() / 2, (double)pos.getZ() + rand.nextDouble(), 0.0D, 0.07D, 0.0D);
 				}
 				worldIn.setBlock(pos, state.setValue(PERSISTENT, true), 10);
-				return ActionResultType.SUCCESS;
+				return InteractionResult.SUCCESS;
 			}
 		}
 		if(player.isCreative()) {
-			if(this.tryPlacingPlant(state, worldIn, pos, player, handIn)) return ActionResultType.SUCCESS;
+			if(this.tryPlacingPlant(state, worldIn, pos, player, handIn)) return InteractionResult.SUCCESS;
 		}else{
 			if(worldIn.getBlockState(pos.below()).is(DIRT)){
-				if(this.tryPlacingPlant(state, worldIn, pos, player, handIn)) return ActionResultType.SUCCESS;
+				if(this.tryPlacingPlant(state, worldIn, pos, player, handIn)) return InteractionResult.SUCCESS;
 			}
 		}
 		return this.harvestPlant(state, worldIn, pos, player, handIn);
 	}
 
 	@Override
-	public boolean isLadder(BlockState state, IWorldReader world, BlockPos pos, LivingEntity entity) {
+	public boolean isLadder(BlockState state, BlockGetter world, BlockPos pos, LivingEntity entity) {
 		return true;
 	}
 
 	@Override
-	public void appendHoverText(ItemStack stack, @Nullable IBlockReader worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+	public void appendHoverText(ItemStack stack, @Nullable BlockGetter worldIn, List<TextComponent> tooltip, TooltipFlag flagIn) {
 		super.appendHoverText(stack, worldIn, tooltip, flagIn);
 		DoTBBlockUtils.addTooltip(tooltip, TOOLTIP_CLIMBING_PLANT);
 	}

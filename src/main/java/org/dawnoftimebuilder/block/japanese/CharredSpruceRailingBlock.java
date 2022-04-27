@@ -1,24 +1,23 @@
 package org.dawnoftimebuilder.block.japanese;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.block.FenceBlock;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.InventoryHelper;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.EnumProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.level.Level;
 import org.dawnoftimebuilder.util.DoTBBlockStateProperties;
 import org.dawnoftimebuilder.util.DoTBBlockStateProperties.FencePillar;
 import org.dawnoftimebuilder.util.DoTBBlockUtils;
@@ -28,7 +27,7 @@ import java.util.List;
 
 public class CharredSpruceRailingBlock extends FenceBlock {
 
-	private static final EnumProperty<DoTBBlockStateProperties.FencePillar> FENCE_PILLAR = DoTBBlockStateProperties.FENCE_PILLAR;
+	private static final EnumProperty<FencePillar> FENCE_PILLAR = DoTBBlockStateProperties.FENCE_PILLAR;
 
 	public CharredSpruceRailingBlock(Properties properties) {
 		super(properties);
@@ -36,15 +35,15 @@ public class CharredSpruceRailingBlock extends FenceBlock {
 	}
 
 	@Override
-	protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		super.createBlockStateDefinition(builder);
 		builder.add(FENCE_PILLAR);
 	}
 
 	@Override
 	@Nullable
-	public BlockState getStateForPlacement(BlockItemUseContext context) {
-		World world = context.getLevel();
+	public BlockState getStateForPlacement(BlockPlaceContext context) {
+		Level world = context.getLevel();
 		BlockPos pos = context.getClickedPos();
 		BlockState oldState = world.getBlockState(pos);
 		if(oldState.getBlock() == this){
@@ -56,8 +55,8 @@ public class CharredSpruceRailingBlock extends FenceBlock {
 	}
 
 	@Override
-	public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-		if (super.use(state, worldIn, pos, player, handIn, hit) == ActionResultType.SUCCESS) return ActionResultType.SUCCESS;
+	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
+		if (super.use(state, worldIn, pos, player, handIn, hit) == InteractionResult.SUCCESS) return InteractionResult.SUCCESS;
 		if(player.isCrouching()) {
 			switch (state.getValue(FENCE_PILLAR)) {
 				case PILLAR_BIG:
@@ -73,13 +72,13 @@ public class CharredSpruceRailingBlock extends FenceBlock {
 					break;
 			}
 
-			return ActionResultType.SUCCESS;
+			return InteractionResult.SUCCESS;
 		}
-		return ActionResultType.PASS;
+		return InteractionResult.PASS;
 	}
 
 	@Override
-	public boolean canBeReplaced(BlockState state, BlockItemUseContext useContext) {
+	public boolean canBeReplaced(BlockState state, BlockPlaceContext useContext) {
 		if(useContext.getItemInHand().getItem() == this.asItem()) {
 			if(useContext.getPlayer() != null && useContext.getPlayer().isCrouching()){
 				return super.canBeReplaced(state, useContext);
@@ -90,7 +89,7 @@ public class CharredSpruceRailingBlock extends FenceBlock {
 	}
 
 	@Override
-	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) {
+	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, Level worldIn, BlockPos currentPos, BlockPos facingPos) {
 		stateIn = super.updateShape(stateIn, facing, facingState, worldIn, currentPos, facingPos);
 		if(facing == Direction.UP && !isSmallPillar(stateIn)){
 			stateIn = stateIn.setValue(FENCE_PILLAR, getBigPillar(worldIn, currentPos));
@@ -102,13 +101,13 @@ public class CharredSpruceRailingBlock extends FenceBlock {
 		return state.getValue(FENCE_PILLAR) == FencePillar.NONE || state.getValue(FENCE_PILLAR) == FencePillar.PILLAR_SMALL;
 	}
 
-	private DoTBBlockStateProperties.FencePillar getBigPillar(IWorld world, BlockPos pos){
+	private DoTBBlockStateProperties.FencePillar getBigPillar(Level world, BlockPos pos){
 		pos = pos.above();
 		return (world.getBlockState(pos).getCollisionShape(world, pos).isEmpty()) ? FencePillar.CAP_PILLAR_BIG : FencePillar.PILLAR_BIG;
 	}
 
 	@Override
-	public void appendHoverText(ItemStack stack, @Nullable IBlockReader worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+	public void appendHoverText(ItemStack stack, @Nullable BlockGetter worldIn, List<TextComponent> tooltip, TooltipFlag flagIn) {
 		super.appendHoverText(stack, worldIn, tooltip, flagIn);
 		DoTBBlockUtils.addTooltip(tooltip, this);
 	}

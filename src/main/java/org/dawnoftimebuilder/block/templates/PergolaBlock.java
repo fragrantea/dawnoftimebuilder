@@ -1,18 +1,17 @@
 package org.dawnoftimebuilder.block.templates;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.dawnoftimebuilder.util.DoTBBlockStateProperties;
 
 import javax.annotation.Nonnull;
@@ -42,39 +41,39 @@ public class PergolaBlock extends BeamBlock {
 	private static VoxelShape[] makeShapes() {
 		VoxelShape vs_axis_x = Block.box(0.0D, 5.0D, 6.0D, 16.0D, 11.0D, 10.0D);
 		VoxelShape vs_axis_z = Block.box(6.0D, 5.0D, 0.0D, 10.0D, 11.0D, 16.0D);
-		VoxelShape vs_axis_x_z = VoxelShapes.or(vs_axis_x, vs_axis_z);
+		VoxelShape vs_axis_x_z = Shapes.or(vs_axis_x, vs_axis_z);
 		VoxelShape vs_axis_y = Block.box(5.0D, 0.0D, 5.0D, 11.0D, 16.0D, 11.0D);
-		VoxelShape vs_axis_y_bottom = VoxelShapes.or(vs_axis_y, Block.box(2.0D, 0.0D, 2.0D, 14.0D, 2.0D, 14.0D));
+		VoxelShape vs_axis_y_bottom = Shapes.or(vs_axis_y, Block.box(2.0D, 0.0D, 2.0D, 14.0D, 2.0D, 14.0D));
 		return new VoxelShape[]{
 				vs_axis_x,
 				vs_axis_z,
 				vs_axis_x_z,
 				vs_axis_y,
 				vs_axis_y_bottom,
-				VoxelShapes.or(vs_axis_y, vs_axis_x),
-				VoxelShapes.or(vs_axis_y_bottom, vs_axis_x),
-				VoxelShapes.or(vs_axis_y, vs_axis_z),
-				VoxelShapes.or(vs_axis_y_bottom, vs_axis_z),
-				VoxelShapes.or(vs_axis_y, vs_axis_x_z),
-				VoxelShapes.or(vs_axis_y_bottom, vs_axis_x_z)
+				Shapes.or(vs_axis_y, vs_axis_x),
+				Shapes.or(vs_axis_y_bottom, vs_axis_x),
+				Shapes.or(vs_axis_y, vs_axis_z),
+				Shapes.or(vs_axis_y_bottom, vs_axis_z),
+				Shapes.or(vs_axis_y, vs_axis_x_z),
+				Shapes.or(vs_axis_y_bottom, vs_axis_x_z)
 		};
 	}
 
 	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
 		return SHAPES[getShapeIndex(state)];
 	}
 
 	@Override
-	public BlockState getCurrentState(BlockState stateIn, IWorld worldIn, BlockPos pos) {
+	public BlockState getCurrentState(BlockState stateIn, Level worldIn, BlockPos pos) {
 		return stateIn.setValue(BOTTOM, super.getCurrentState(stateIn, worldIn, pos).getValue(BOTTOM) && !stateIn.getValue(CLIMBING_PLANT).hasNoPlant());
 	}
 
 	@Override
-	public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+	public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
 		if (!(worldIn.getBlockState(pos.below()).getBlock() instanceof PergolaBlock)){
 			if (this.tryPlacingPlant(state.setValue(BOTTOM, state.getValue(AXIS_Y) && canNotConnectUnder(worldIn.getBlockState(pos.below()))), worldIn, pos, player, handIn))
-				return ActionResultType.SUCCESS;
+				return InteractionResult.SUCCESS;
 		}
 		return super.use(state, worldIn, pos, player, handIn, hit);
 	}

@@ -1,9 +1,8 @@
 package org.dawnoftimebuilder.registry;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
+import net.minecraft.world.item.Item;
 import net.minecraft.item.SpawnEggItem;
-import net.minecraftforge.fml.RegistryObject;
+import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.dawnoftimebuilder.item.egyptian.PharaohArmorItem;
@@ -17,10 +16,8 @@ import org.dawnoftimebuilder.item.templates.HatItem;
 import org.dawnoftimebuilder.item.templates.ItemDoTB;
 import org.dawnoftimebuilder.util.DoTBFoods;
 
-import static net.minecraft.inventory.EquipmentSlotType.*;
+import static net.minecraft.world.entity.EquipmentSlot.*;
 import static org.dawnoftimebuilder.DawnOfTimeBuilder.MOD_ID;
-import static org.dawnoftimebuilder.registry.DoTBEntitiesRegistry.JAPANESE_DRAGON_ENTITY;
-import static org.dawnoftimebuilder.registry.DoTBEntitiesRegistry.SILKMOTH_ENTITY;
 
 public class DoTBItemsRegistry {
 

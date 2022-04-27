@@ -1,16 +1,18 @@
 package org.dawnoftimebuilder.registry;
 
 import net.minecraft.block.*;
-import net.minecraft.block.material.Material;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.material.Material;
 import net.minecraft.block.material.MaterialColor;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.DyeColor;
-import net.minecraft.item.Item;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraftforge.fml.RegistryObject;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-import org.dawnoftimebuilder.DoTBConfig;
 import org.dawnoftimebuilder.block.IBlockCustomItem;
 import org.dawnoftimebuilder.block.french.LimestoneChimneyBlock;
 import org.dawnoftimebuilder.block.french.LimestoneGargoyleBlock;
@@ -24,7 +26,7 @@ import org.dawnoftimebuilder.util.DoTBFoods;
 
 import java.util.function.ToIntFunction;
 
-import static net.minecraft.block.Blocks.*;
+import static net.minecraft.world.level.block.Blocks.*;
 import static net.minecraftforge.common.PlantType.CROP;
 import static net.minecraftforge.common.PlantType.PLAINS;
 import static org.dawnoftimebuilder.DawnOfTimeBuilder.DOTB_TAB;
